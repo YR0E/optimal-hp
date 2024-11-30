@@ -1,0 +1,6 @@
+streamlit
+st-gsheets-connection==0.1.0
+numpy==1.26.0
+pandas==2.1.1
+plotly==5.23.0
+
