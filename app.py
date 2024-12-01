@@ -50,7 +50,7 @@ def validate_and_submit_feedback(sheet, feedback_data):
 # Navigation
 PAGES = [
     st.Page("page0_home.py", title="Home", icon=":material/home:"),
-    st.Page("page1.py", title="Page 1", icon=":material/function:"),
+    st.Page("page1.py", title="Find min(w)", icon=":material/function:"),
     st.Page("page2.py", title="Page 2", icon=":material/function:")
 ]
 
