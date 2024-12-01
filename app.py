@@ -1,96 +1,79 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+import pytz
 from datetime import datetime
-import pandas as pd
+import gspread
+from google.oauth2.service_account import Credentials
 
-# Establish Google Sheets connection once
+
+# Define constants
+SECTION_TYPES = ["Concept", "Documentation", "Calculation", "Visualization", "Other"]
+FEEDBACK_TYPES = ["Question", "Suggestion", "Request", "Error", "Bug", "Other"]
+TIMEZONE = pytz.timezone('Asia/Almaty')
+
+# Define the scope for Google API
+SCOPES = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/drive"
+]
+
+
 @st.cache_resource
-def get_connection():
-    return st.connection("gsheets", type=GSheetsConnection)
-
-# Fetch data from Google Sheets and store in session state
-def initialize_data(conn, worksheet_name):
-    if 'existing_data' not in st.session_state:
-        data = conn.read(worksheet=worksheet_name, usecols=list(range(5)))
-        st.session_state.existing_data = data.dropna(how="all")
-
-# Append new feedback to session state data
-def append_feedback_to_session(feedback_row):
-    st.session_state.existing_data = pd.concat(
-        [st.session_state.existing_data, feedback_row], ignore_index=True
+def get_google_sheet():
+    """Initialize and cache the Google Sheets client and worksheet."""
+    credentials = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"], scopes=SCOPES
     )
-
-# Update Google Sheets with the data from session state
-def update_gsheet(conn, worksheet_name):
-    conn.update(worksheet=worksheet_name, data=st.session_state.existing_data)
+    client = gspread.authorize(credentials)
+    return client.open("Feedback").sheet1  # Access the first sheet
 
 
-# Page/Sidebar configuration
-pages = [
+def validate_and_submit_feedback(sheet, feedback_data):
+    # Validate the feedback form inputs and submit data to Google Sheets.
+
+    name = feedback_data[1]
+    section = feedback_data[2]
+    if not name or not section:
+        st.warning("Please fill out all required fields.")
+    else:
+        
+        with st.spinner("Submitting feedback..."):
+            try:
+                sheet.append_rows([feedback_data])
+                st.success("Feedback successfully submitted!")
+            except Exception as e:
+                st.error(f"Error updating Google Sheets: {e}")
+
+
+
+# Navigation
+PAGES = [
     st.Page("page0_home.py", title="Home", icon=":material/home:"),
     st.Page("page1.py", title="Page 1", icon=":material/function:"),
-    st.Page("page2.py", title="Page 2", icon=":material/function:"),
-    # st.Page("feedback.py", title="Feedback", icon=":material/feedback:"),
+    st.Page("page2.py", title="Page 2", icon=":material/function:")
 ]
 
-pg = st.navigation(pages)
+pg = st.navigation(PAGES)
 pg.run()
 
-SECTION_TYPES = [
-    "Concept",
-    "Documentation",
-    "Calculation",
-    "Visualization",
-    "Other"
-]
-
-FEEDBACK_TYPES = [
-    "Question",
-    "Suggestion",
-    "Request",
-    "Error",
-    "Bug",
-    "Other"
-]
-
+# Sidebar: Feedback Form
 with st.sidebar:
     st.markdown("## Feedback Submission")
     with st.expander("Please leave your feedback here", expanded=True):
         with st.form(key="feedback_form", clear_on_submit=True, border=False):
-            conn = get_connection()
-            worksheet_name = "HP_optima"
-            initialize_data(conn, worksheet_name)
+            # Retrieve the cached Google Sheet
+            sheet = get_google_sheet()
 
-            submitting_date = datetime.now()
+            # Collecting feedback inputs
+            submitting_date = datetime.now(TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
             name = st.text_input(label="Name* (*required*)")
             col1, col2 = st.columns(2)
             section_type = col1.selectbox("Section*", options=SECTION_TYPES, index=None)
             feedback_type = col2.selectbox("Feedback Type", options=FEEDBACK_TYPES, index=None)
             comment = st.text_area(label="Comments")
+            feedback_data = [submitting_date, name, section_type, feedback_type, comment]
 
             submit_button = st.form_submit_button(label="Leave feedback")
-
             if submit_button:
-                # Ensure mandatory fields are filled
-                if not name or not section_type:
-                    st.warning("Ensure all mandatory fields are filled!")
-                    st.stop()
-
-                # Prepare feedback data
-                feedback_info = pd.DataFrame([{
-                    "Date": submitting_date.strftime("%Y-%m-%d %H:%M:%S"),
-                    "Name": name,
-                    "Section": section_type,
-                    "CommentType": feedback_type,
-                    "Comment": comment,
-                }])
-
-                # Append new feedback to session state
-                append_feedback_to_session(feedback_info)
-
-                # Update Google Sheets
-                try:
-                    update_gsheet(conn, worksheet_name)
-                    st.success("Feedback successfully submitted!")
-                except Exception as e:
-                    st.error(f"Error updating Google Sheets: {e}")
+                validate_and_submit_feedback(sheet, feedback_data)
