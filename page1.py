@@ -6,8 +6,9 @@ from util.calc_imposed_q0 import find_minimum, objective_function
 
 st.write("Welcome to Page 1")
 
-st.page_link("page0_home.py", label="Home page")
-st.page_link("page2.py", label="Page 2")
+st.markdown("### Navigation:")
+st.page_link("page0_home.py", label="Home page", icon=":material/home:")
+st.page_link("page2.py", label="Page 2", icon=":material/function:")
 
 st.markdown('***')
 st.title("About")
@@ -18,7 +19,9 @@ st.markdown('***')
 
 
 # Initialize session state for the slider values
-default_values = {
+MULTIPLIER = 10**4
+POWER_OF_10 = np.log10(MULTIPLIER)
+DEFAULT_VALUES = {
     'eps_total': 2.0,
     'c_g': 0.2,
     'c_p': 0.2,
@@ -26,13 +29,13 @@ default_values = {
     't_s': 0.9
 }
 
-for key, value in default_values.items():
+for key, value in DEFAULT_VALUES.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
 # Function to reset the sliders
 def reset_sliders():
-    for key, value in default_values.items():
+    for key, value in DEFAULT_VALUES.items():
         st.session_state[key] = value
 
 # Layout with sliders
@@ -52,7 +55,7 @@ init_c_p = col2.slider('c_p', min_value=0.05, max_value=0.5, step=0.01,
                        format="%.2f", label_visibility="collapsed", key="c_p")
 
 col1, col2 = st.columns((0.15, 0.85))
-col1.write(r'$q_{0} \times 10^{-4}:$')
+col1.write(fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}:$')
 init_q = col2.slider('q0', min_value=1.0, max_value=50.0, step=0.1,
                      format="%.1f", label_visibility="collapsed", key="q0")
 
@@ -66,7 +69,6 @@ st.button("Reset", on_click=reset_sliders)
 
 
 
-MULTIPLIER = 10**4
 initial_params = [init_c_g, init_c_p, init_eps_total, init_q, init_t_s, MULTIPLIER]
 
 
@@ -106,7 +108,7 @@ fig.update_layout(title=dict(text='Objective Function Surface Plot'), autosize=F
                   scene=dict(
                       xaxis_title='<i>ε<sub>g</sub></i>',
                       yaxis_title='<i>ε<sub>p</sub></i>',
-                      zaxis_title='<i>w · 10<sup>−4</sup></i>',
+                      zaxis_title=f'<i>w · 10<sup>−{POWER_OF_10:.0f}</sup></i>',
                       xaxis_title_font=dict(family='STIX Two Math'),
                       yaxis_title_font=dict(family='STIX Two Math'),
                       zaxis_title_font=dict(family='STIX Two Math'),
@@ -121,6 +123,6 @@ st.write(
     r'Optimized $\varepsilon^*$ values: $\varepsilon_g = $', optimized_e_g.round(2), r', $\varepsilon_p = $', optimized_e_p.round(2),
     r', $\varepsilon_{ev} = $', optimized_e_ev.round(2), r', $\varepsilon_{cd} = $', optimized_e_cd.round(2))
     
-st.write('Minimum $w = $', minimum_objective_value.round(3), r' $ \times 10^{-4}$')
+st.write('Minimum $w = $', minimum_objective_value.round(3), fr' $ \times 10^{{-{POWER_OF_10:.0f}}}$')
 
 st.write('Optimization Result:', optimization_result)
