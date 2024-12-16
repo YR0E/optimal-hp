@@ -1,5 +1,9 @@
 import streamlit as st
 
+st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_title='optimizer by Yelnar')
+
+st.toast('Development in progress...', icon=':material/info:')
+
 st.title("Welcome to Home Page")
 st.write("This is the home page content.")
 
