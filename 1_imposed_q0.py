@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from util.calc_imposed_q0 import find_minimum, objective_function, objective_function_ir_ratio, objective_function_ep_rate
 
@@ -7,10 +8,13 @@ st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_title='
 
 
 st.write("Welcome to Page 1")
+st.warning("Work in progress...")
+st.markdown('***')
 
 st.markdown("### Navigation:")
-st.page_link("page0_home.py", label="Home page", icon=":material/home:")
-st.page_link("page2.py", label="Page 2", icon=":material/function:")
+st.page_link("0_home.py", label="Home page", icon=":material/home:")
+st.page_link("2_imposed_w0.py", label="Imposed w0: Find maximum heat extraction max(q)", icon=":material/function:")
+st.page_link("3_imposed_COP0.py", label="Imposed COP0: Find maximum heat extraction max(q)", icon=":material/function:")
 
 st.markdown('***')
 st.title("About")
@@ -46,6 +50,7 @@ def reset_sliders():
 
 col_control, _, col_plot = st.columns((0.4, 0.01, 0.59))
 
+#========SLIDERS========
 with col_control:
     # Layout with sliders
     col1, col2 = st.columns((0.15, 0.85))
@@ -103,7 +108,21 @@ optimized_e_g, optimized_e_p, optimized_e_ev, optimized_e_cd = optimization_resu
 minimum_objective_value = optimization_result.fun * MULTIPLIER
 
 
+df = pd.DataFrame({
+    'I': [np.NaN, init_I, np.NaN],
+    's': [np.NaN, np.NaN, init_s],
+    'e_g': [optimization_result.x[0], optimization_result_ir_ratio.x[0], optimization_result_ep_rate.x[0]],
+    'e_p': [optimization_result.x[1], optimization_result_ir_ratio.x[1], optimization_result_ep_rate.x[1]],
+    'e_ev': [optimization_result.x[2], optimization_result_ir_ratio.x[2], optimization_result_ep_rate.x[2]],
+    'e_cd': [optimization_result.x[3], optimization_result_ir_ratio.x[3], optimization_result_ep_rate.x[3]],
+    'min(w), 10^-4': np.array([optimization_result.fun, optimization_result_ir_ratio.fun, optimization_result_ep_rate.fun]) * MULTIPLIER
+    }, 
+    index=['reversibility', 'irreversibility ratio', 'entropy production rate']
+)
 
+
+
+#=======PLOT=======
 # Generate data for surface plot
 step_size = 0.01
 e_g_values = np.arange(0.1, 1.0001, step_size)
@@ -112,7 +131,6 @@ X, Y = np.meshgrid(e_g_values, e_p_values)
 Z = objective_function([X, Y, X, Y], initial_params) * MULTIPLIER
 Z_ir = objective_function_ir_ratio([X, Y, X, Y], initial_params_ir_ratio) * MULTIPLIER
 Z_ep = objective_function_ep_rate([X, Y, X, Y], initial_params_ep_rate) * MULTIPLIER
-
 
 
 if init_eps_total/2 <= 1.1: 
@@ -137,7 +155,20 @@ config = {
         "scale": 3       # Increase the resolution (scales up the image)
     }
 }
-
+contours = dict(
+    x=dict(
+        show=True,
+        usecolormap=True,
+        highlight=True,
+        highlightcolor="white",
+    ),
+    y=dict(
+        show=True,
+        usecolormap=True,
+        highlight=True,
+        highlightcolor="white",
+    )
+)
 
 fig = go.Figure()
 
@@ -145,75 +176,24 @@ fig.add_trace(go.Surface(
     z=Z, x=X, y=Y, 
     name='reversibility', legendgroup='reversibility', 
     colorscale='Viridis', showlegend=True, showscale=False, opacity=0.75,
-    contours=dict(
-        x=dict(
-            show=True,
-            usecolormap=True,
-            width=2,
-            highlight=True,
-            highlightcolor="gray",
-            highlightwidth=5
-        ),
-        y=dict(
-            show=True,
-            usecolormap=True,
-            width=2,
-            highlight=True,
-            highlightcolor="gray",
-            highlightwidth=2
-        )
-    )
+    contours=contours
 ))
 fig.add_trace(go.Surface(
     z=Z_ir, x=X, y=Y, 
     name='irreversibility ratio', legendgroup='irreversibility',
     colorscale='RdBu_r', showlegend=True, showscale=False, opacity=0.75,
-    contours=dict(
-        x=dict(
-            show=True,
-            usecolormap=True,
-            width=2,
-            highlight=True,
-            highlightcolor="gray",
-            highlightwidth=5
-        ),
-        y=dict(
-            show=True,
-            usecolormap=True,
-            width=2,
-            highlight=True,
-            highlightcolor="gray",
-            highlightwidth=2
-        )
-    )
+    contours=contours
 ))
 fig.add_trace(go.Surface(
     z=Z_ep, x=X, y=Y, 
     name='entropy production rate', legendgroup='entropy production', 
     colorscale='rdylgn_r', showlegend=True, showscale=False, opacity=0.75,
-    contours=dict(
-        x=dict(
-            show=True,
-            usecolormap=True,
-            width=2,
-            highlight=True,
-            highlightcolor="gray",
-            highlightwidth=5
-        ),
-        y=dict(
-            show=True,
-            usecolormap=True,
-            width=2,
-            highlight=True,
-            highlightcolor="gray",
-            highlightwidth=2
-        )
-    )
+    contours=contours
 ))
 fig.add_trace(go.Surface(
     z=Z_line, x=X_line, y=Y_line, 
     name='constraint', legendgroup='constraint', 
-    colorscale=[[0, 'red'], [1, 'red']], showlegend=True, showscale=False, opacity=0.15,
+    colorscale=[[0, 'red'], [1, 'red']], showlegend=True, showscale=False, opacity=0.1,
 ))
 fig.add_trace(go.Scatter3d(
     x=[optimization_result.x[0]], y=[optimization_result.x[1]], z=[optimization_result.fun * MULTIPLIER],
@@ -235,10 +215,10 @@ fig.add_trace(go.Scatter3d(
 ))
 
 fig.update_layout(
-    title=dict(text='Objective Function Surface Plot'), 
+    title=dict(text='3D Plot'), 
     autosize=False,
     width=700, height=540,
-    margin=dict(l=10, r=10, b=20, t=40),
+    margin=dict(l=10, r=10, b=10, t=40),
     scene=dict(
         xaxis_title='<i>ε<sub>g</sub></i>',
         yaxis_title='<i>ε<sub>p</sub></i>',
@@ -251,7 +231,6 @@ fig.update_layout(
             eye=dict(x=2, y=1, z=0.5)
         )
     ),
-    uirevision='constant',
     legend=dict(
         yanchor="top",
         y=1,
@@ -265,12 +244,5 @@ fig.update_layout(
 with col_plot:
     st.plotly_chart(fig, use_container_width=True, config=config)
 
-    st.write(
-        r'Optimized $\varepsilon^*$ values: $\varepsilon_g = $', optimized_e_g.round(2), r', $\varepsilon_p = $', optimized_e_p.round(2),
-        r', $\varepsilon_{ev} = $', optimized_e_ev.round(2), r', $\varepsilon_{cd} = $', optimized_e_cd.round(2))
-    
-    st.write('Minimum $w = $', minimum_objective_value.round(3), fr' $ \times 10^{{-{POWER_OF_10:.0f}}}$')
-
-st.write('Optimization Result:', optimization_result)
-st.write('Optimization Result of irreversibility ratio:', optimization_result_ir_ratio)
-st.write('Optimization Result of entropy production rate:', optimization_result_ep_rate)
+    st.write('Results:')
+    st.dataframe(df)

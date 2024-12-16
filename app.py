@@ -18,6 +18,17 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
+# Navigation
+PAGES = [
+    st.Page("0_home.py", title="Home", icon=":material/home:"),
+    st.Page("1_imposed_q0.py", title="Imposed q0: min(w)", icon=":material/function:"),
+    st.Page("2_imposed_w0.py", title="Imposed w0: max(q)", icon=":material/function:"),
+    st.Page("3_imposed_COP0.py", title="Imposed COP0: max(q)", icon=":material/function:")
+]
+
+pg = st.navigation(PAGES)
+pg.run()
+
 
 @st.cache_resource
 def get_google_sheet():
@@ -47,19 +58,12 @@ def validate_and_submit_feedback(sheet, feedback_data):
 
 
 
-# Navigation
-PAGES = [
-    st.Page("page0_home.py", title="Home", icon=":material/home:"),
-    st.Page("page1.py", title="Find min(w)", icon=":material/function:"),
-    st.Page("page2.py", title="Page 2", icon=":material/function:")
-]
 
-pg = st.navigation(PAGES)
-pg.run()
 
 # Sidebar: Feedback Form
 with st.sidebar:
     st.markdown("## Feedback")
+    st.success("Feedback works well!")
     with st.expander("Drop a line here", expanded=True):
         with st.form(key="feedback_form", clear_on_submit=True, border=False):
             # Retrieve the cached Google Sheet
