@@ -16,10 +16,11 @@ st.page_link("0_home.py", label="Home page", icon=":material/home:")
 st.page_link("2_imposed_w0.py", label="Imposed w0: Find maximum heat extraction max(q)", icon=":material/function:")
 st.page_link("3_imposed_COP0.py", label="Imposed COP0: Find maximum heat extraction max(q)", icon=":material/function:")
 
+
+#============MAIN==============
 st.markdown('***')
-st.title("About")
-
-
+st.markdown("## Minimum power consumption")
+st.markdown('Text about...')
 
 
 # Initialize session state for the slider values
@@ -43,15 +44,20 @@ DEFAULT_VALUES_C = {
     'I_c': 1.01,
     's_c': 0.1
 }
+DEFAULT_VALUES_SA_E = {
+    'c_t_sae': 0.5,
+    'q0_sae': 10.0,
+    't_s_sae': 0.9,
+    'I_sae': 1.1,
+    's_sae': 1.1
+}
 
-for key, value in DEFAULT_VALUES_EPS.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
-for key, value in DEFAULT_VALUES_C.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
 
-# Function to reset the sliders
+def init_session_state(default):
+    for key, value in default.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
 def reset_sliders(default):
     for key, value in default.items():
         st.session_state[key] = value
@@ -69,6 +75,7 @@ tab_eps_total, tab_c_total = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$'])
 
 #===========EPS_TOTAL================
 with tab_eps_total:
+    init_session_state(DEFAULT_VALUES_EPS)
     st.write(r"Curzon-Ahlborn model: imposed $q_0 - \varepsilon_{total}$: find minimum power consumption $\min(w)$")
 
     col_control, _, col_plot = st.columns((0.34, 0.02, 0.64))
@@ -254,6 +261,7 @@ with tab_eps_total:
 
 #===========C_TOTAL================
 with tab_c_total:
+    init_session_state(DEFAULT_VALUES_C)
     st.write("Curzon-Ahlborn model: imposed $q_0 - c_{total}$: find minimum power consumption $\min(w)$")
 
     col_control, _, col_plot = st.columns((0.34, 0.02, 0.64))
@@ -425,3 +433,51 @@ with tab_c_total:
 
     st.write('#### Results:')
     st.dataframe(df)
+
+
+#=========SENSITIVITY ANALYSIS================
+st.markdown('***')
+st.markdown('## Sensitivity analysis')
+st.markdown('Text about...')
+
+
+st.info(r'Choose a variable/parameter to analyse its impact on the minimum power consumption $min(w)$')
+tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$', 
+                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$t_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$I$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'])
+
+with tab_e:
+    init_session_state(DEFAULT_VALUES_SA_E)
+    col_control, _, col_plot = st.columns((0.34, 0.02, 0.64))
+    
+    #========SLIDERS========
+    with col_control:
+        init_c_t = init_slider('$c_{total}:$', 'c_t_sae', 0.1, 1.0, 0.01)
+        init_q = init_slider('$q_{0}:$', 'q0_sae', 1.0, 100.0, 0.1, fmt="%.1f",
+                             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
+        init_t_s = init_slider('$t_{s}:$', 't_s_sae', 0.8, 1.0, 0.01)
+        init_I = init_slider('$I:$', 'I_sae', 1.0, 3.0, 0.01)
+        init_s = init_slider('$s:$', 's_sae', 0.1, 20.0, 0.01,
+                             help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
+
+        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_E), key='btn_sae')
+
+############################
+#HERE<<<<<<<<<<<<<<<<<
+
+with tab_c:
+    st.write('c')
+
+with tab_q:
+    st.write('q')
+
+with tab_t:
+    st.write('t')
+
+with tab_i:
+    st.write('i')
+    
+with tab_s:
+    st.write('s')
