@@ -7,6 +7,12 @@ st.toast('Development in progress...', icon=':material/info:')
 st.title("Welcome to Home Page")
 st.write("This is the home page content.")
 st.warning("Will be updated soon...")
+st.info(r'''
+        Ready to use:
+        - Curzon-Ahlborn : imposed $q_0 - \varepsilon_{total}$    
+        - Feedback section  
+        ''')
+
 st.markdown('***')
 
 st.markdown("### Navigation:")

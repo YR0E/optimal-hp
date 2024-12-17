@@ -63,7 +63,6 @@ def validate_and_submit_feedback(sheet, feedback_data):
 # Sidebar: Feedback Form
 with st.sidebar:
     st.markdown("## Feedback")
-    st.success("Feedback works well!")
     with st.expander("Drop a line here", expanded=True):
         with st.form(key="feedback_form", clear_on_submit=True, border=False):
             # Retrieve the cached Google Sheet
