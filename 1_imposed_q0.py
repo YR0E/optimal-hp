@@ -486,9 +486,9 @@ with tab_e:
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_E), key='btn_sae')
 
     e_total = np.arange(init_eps_t[0], init_eps_t[1]+0.1, 0.1)
-    res, res_ir, res_ep = np.zeros((3, len(e_total)), dtype='object')
+    result, result_ir, result_ep = np.zeros((3, len(e_total)), dtype='object')
     minw, minw_ir, minw_ep = np.zeros((3, len(e_total)))
-
+    res, res_ir, res_ep = np.zeros((3, len(e_total)))
     
     # Vectorize the wrapper function
     find_minimum_v = np.vectorize(find_minimum_of_)
@@ -498,33 +498,82 @@ with tab_e:
     # Call the vectorized function
     with st.spinner("Calculating..."):
         opt_var = 'sae'
-        res = find_minimum_v(e_total, opt_var)
-        res_ir = find_minimum_ir_v(e_total, opt_var)
-        res_ep = find_minimum_ep_v(e_total, opt_var)
+        result = find_minimum_v(e_total, opt_var)
+        result_ir = find_minimum_ir_v(e_total, opt_var)
+        result_ep = find_minimum_ep_v(e_total, opt_var)
     
-    minw = [res[i].fun*MULTIPLIER for i in range(len(res))]
-    minw_ir = [res_ir[i].fun*MULTIPLIER for i in range(len(res_ir))]
-    minw_ep = [res_ep[i].fun*MULTIPLIER for i in range(len(res_ep))]
+    res = [(e_total[i], result[i].fun*MULTIPLIER, *result[i].x) for i in range(len(result))]
+    res_ir = [(e_total[i], result_ir[i].fun*MULTIPLIER, *result_ir[i].x) for i in range(len(result_ir))]
+    res_ep = [(e_total[i], result_ep[i].fun*MULTIPLIER, *result_ep[i].x) for i in range(len(result_ep))]
+
+    df1 = pd.DataFrame(res, columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p'])
+    df2 = pd.DataFrame(res_ir, columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p'])
+    df3 = pd.DataFrame(res_ep, columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p'])
+    df1 = df1.set_index('ε_t')
+    df2 = df2.set_index('ε_t')
+    df3 = df3.set_index('ε_t')
+    df1[df1 < 0] = None
+    df2[df2 < 0] = None
+    df3[df3 < 0] = None
+
+    st.write("***")
+    col1, col2, col3 = st.columns((1, 1, 1))
+    with col1:
+        st.write("Reversibility results:")
+        st.dataframe(df1)
+    with col2:
+        st.write("Irreversibility ratio results:")
+        st.dataframe(df2)
+    with col3:
+        st.write("Entropy production rate results:")
+        st.dataframe(df3)
 
 
-    df = pd.DataFrame({
-        'e_t': e_total,
-        'minw': minw,
-        'minw_i': minw_ir,
-        'minw_s': minw_ep
-        }
+    #========PLOT========
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=df1.index, y=df1.minw,
+        mode='lines',
+        name='reversibility', showlegend=True,
+    ))
+    fig.add_trace(go.Scatter(
+        x=df2.index, y=df2.minw,
+        mode='lines',
+        name='irreversibilty ratio', showlegend=True,
+    ))
+    fig.add_trace(go.Scatter(
+        x=df3.index, y=df3.minw,
+        mode='lines',
+        name='entropy production rate', showlegend=True,
+    ))
+
+    fig.update_layout(
+        title=dict(text='Plot'), 
+        autosize=False,
+        width=600, height=420,
+        margin=dict(l=10, r=10, b=10, t=40),
+        xaxis=dict(
+            title='<i>ε<sub>total</sub></i>',
+            title_font=dict(family='STIX Two Math', size=14)
+        ),
+        yaxis=dict(
+            title=f'<i>min(w) · 10<sup>−{POWER_OF_10:.0f}</sup></i>',
+            title_font=dict(family='STIX Two Math', size=14)
+        ),
+        legend=dict(
+            yanchor="top",
+            y=1,
+            xanchor="right",
+            x=1,
+            orientation="h"
+        )
     )
-    df = df.set_index('e_t')
-    df[df < 0] = None
-
 
 
     with col_plot:
-        st.line_chart(df)
+        st.plotly_chart(fig, use_container_width=True, config=config, key='plotly_sae')
 
-
-    st.write('#### Results:')
-    st.dataframe(df)
 
 
 with tab_c:
