@@ -3,7 +3,6 @@ import streamlit as st
 from scipy.optimize import minimize
 
 
-@st.cache_data
 def objective_function(x, initial_params, config):
     if config=='e':
         e_g, e_p, e_ev, e_cd = x   # variables
@@ -24,7 +23,6 @@ def objective_function(x, initial_params, config):
     return q0 * (c_eps*q0 + e_t*(1-t_s)) / (e_t*t_s - c_eps*q0)
 
 
-@st.cache_data
 def objective_function_ir_ratio(x, initial_params, config):
     if config=='e':
         e_g, e_p, e_ev, e_cd = x   # variables
@@ -45,7 +43,6 @@ def objective_function_ir_ratio(x, initial_params, config):
     return q0 * (I*c_eps*q0 + e_t*(I-t_s)) / (e_t*t_s - I*c_eps*q0)
 
 
-@st.cache_data
 def objective_function_ep_rate(x, initial_params, config):
     if config=='e':
         e_g, e_p, e_ev, e_cd = x   # variables
@@ -69,7 +66,6 @@ def objective_function_ep_rate(x, initial_params, config):
     return (q0 * (c_eps*q0 + c_A - c_B*t_s) + s*t_s*e_t) / (c_B*t_s - c_eps*q0)
  
 
-
 def constraint(x, initial_var_total, config):
     if config=='e':
         # e variables
@@ -83,11 +79,11 @@ def constraint(x, initial_var_total, config):
         *x, _, _ = x
         return initial_var_total - sum(x)
     elif config=='sae2':
-        # e variables
+        # c variables
         _, _, _, _, *x = x
         return initial_var_total - sum(x)
 
-@st.cache_data
+
 def find_minimum(_obj_function, initial_params, config):
     if config=='e':
         initial_eps_total = initial_params[2]

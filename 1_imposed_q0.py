@@ -108,10 +108,11 @@ with tab_eps_total:
 
 
     # Perform optimization
-    opt_var = 'e'
-    res = find_minimum(objective_function, initial_params, opt_var)
-    res_ir_ratio = find_minimum(objective_function_ir_ratio, initial_params_ir_ratio, opt_var)
-    res_ep_rate = find_minimum(objective_function_ep_rate, initial_params_ep_rate, opt_var)
+    with st.spinner("Optimizing..."):
+        opt_var = 'e'
+        res = find_minimum(objective_function, initial_params, opt_var)
+        res_ir_ratio = find_minimum(objective_function_ir_ratio, initial_params_ir_ratio, opt_var)
+        res_ep_rate = find_minimum(objective_function_ep_rate, initial_params_ep_rate, opt_var)
 
 
     df = pd.DataFrame({
@@ -288,10 +289,11 @@ with tab_c_total:
 
 
     # Perform optimization
-    opt_var_c = 'c'
-    res_c = find_minimum(objective_function, initial_params_c, opt_var_c)
-    res_ir_c = find_minimum(objective_function_ir_ratio, initial_params_ir_c, opt_var_c)
-    res_ep_c = find_minimum(objective_function_ep_rate, initial_params_ep_c, opt_var_c)
+    with st.spinner("Optimizing..."):
+        opt_var_c = 'c'
+        res_c = find_minimum(objective_function, initial_params_c, opt_var_c)
+        res_ir_c = find_minimum(objective_function_ir_ratio, initial_params_ir_c, opt_var_c)
+        res_ep_c = find_minimum(objective_function_ep_rate, initial_params_ep_c, opt_var_c)
 
 
     df = pd.DataFrame({
@@ -449,9 +451,26 @@ tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$
                                                     '&nbsp;&nbsp;&nbsp;&nbsp;$I$&nbsp;&nbsp;&nbsp;&nbsp;', 
                                                     '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'])
 
+    # Define a wrapper for vectorized call
+def find_minimum_of_(e_t, config):
+    # Dynamically construct initial_params for each `e_t`
+    initial_params = (e_t, init_c_t, init_q, init_t_s, MULTIPLIER)
+    return find_minimum(objective_function, initial_params, config)
+
+def find_minimum_ofir_(e_t, config):
+    # Dynamically construct initial_params for each `e_t`
+    initial_params_ir = (e_t, init_c_t, init_q, init_t_s, init_I, MULTIPLIER)
+    return find_minimum(objective_function_ir_ratio, initial_params_ir, opt_var)
+
+def find_minimum_ofep_(e_t, config):
+    # Dynamically construct initial_params for each `e_t`
+    initial_params_ep = (e_t, init_c_t, init_q, init_t_s, init_s, MULTIPLIER)
+    return find_minimum(objective_function_ep_rate, initial_params_ep, opt_var)
+
+
 with tab_e:
     init_session_state(DEFAULT_VALUES_SA_E)
-    col_control, _, col_plot = st.columns((0.34, 0.02, 0.64))
+    col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     #========SLIDERS========
     with col_control:
@@ -469,38 +488,7 @@ with tab_e:
     e_total = np.arange(init_eps_t[0], init_eps_t[1]+0.1, 0.1)
     res, res_ir, res_ep = np.zeros((3, len(e_total)), dtype='object')
     minw, minw_ir, minw_ep = np.zeros((3, len(e_total)))
-    # for i, e_t in enumerate(e_total):
-    #     initial_params = [e_t, init_c_t, init_q, init_t_s, MULTIPLIER]
-    #     initial_params_ir = [e_t, init_c_t, init_q, init_t_s, init_I, MULTIPLIER]
-    #     initial_params_ep = [e_t, init_c_t, init_q, init_t_s, init_s, MULTIPLIER]
 
-
-    #     # Perform optimization
-    #     opt_var = 'sae'
-    #     res[i] = find_minimum(objective_function, initial_params, opt_var)
-    #     res_ir[i] = find_minimum(objective_function_ir_ratio, initial_params_ir, opt_var)
-    #     res_ep[i] = find_minimum(objective_function_ep_rate, initial_params_ep, opt_var)
-
-    #     minw[i] = res[i].fun*MULTIPLIER
-    #     minw_ir[i] = res_ir[i].fun*MULTIPLIER
-    #     minw_ep[i] = res_ep[i].fun*MULTIPLIER
-
-    # Define a wrapper for vectorized call
-    @st.cache_data
-    def find_minimum_of_(e_t, config):
-        # Dynamically construct initial_params for each `e_t`
-        initial_params = (e_t, init_c_t, init_q, init_t_s, MULTIPLIER)
-        return find_minimum(objective_function, initial_params, config)
-    @st.cache_data
-    def find_minimum_ofir_(e_t, config):
-        # Dynamically construct initial_params for each `e_t`
-        initial_params_ir = (e_t, init_c_t, init_q, init_t_s, init_I, MULTIPLIER)
-        return find_minimum(objective_function_ir_ratio, initial_params_ir, opt_var)
-    @st.cache_data
-    def find_minimum_ofep_(e_t, config):
-        # Dynamically construct initial_params for each `e_t`
-        initial_params_ep = (e_t, init_c_t, init_q, init_t_s, init_s, MULTIPLIER)
-        return find_minimum(objective_function_ep_rate, initial_params_ep, opt_var)
     
     # Vectorize the wrapper function
     find_minimum_v = np.vectorize(find_minimum_of_)
@@ -508,14 +496,16 @@ with tab_e:
     find_minimum_ep_v = np.vectorize(find_minimum_ofep_)
 
     # Call the vectorized function
-    opt_var = 'sae'
-    res = find_minimum_v(e_total, opt_var)
-    res_ir = find_minimum_ir_v(e_total, opt_var)
-    res_ep = find_minimum_ep_v(e_total, opt_var)
+    with st.spinner("Calculating..."):
+        opt_var = 'sae'
+        res = find_minimum_v(e_total, opt_var)
+        res_ir = find_minimum_ir_v(e_total, opt_var)
+        res_ep = find_minimum_ep_v(e_total, opt_var)
     
     minw = [res[i].fun*MULTIPLIER for i in range(len(res))]
     minw_ir = [res_ir[i].fun*MULTIPLIER for i in range(len(res_ir))]
     minw_ep = [res_ep[i].fun*MULTIPLIER for i in range(len(res_ep))]
+
 
     df = pd.DataFrame({
         'e_t': e_total,
@@ -525,6 +515,12 @@ with tab_e:
         }
     )
     df = df.set_index('e_t')
+    df[df < 0] = None
+
+
+
+    with col_plot:
+        st.line_chart(df)
 
 
     st.write('#### Results:')
