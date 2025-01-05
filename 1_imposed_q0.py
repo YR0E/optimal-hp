@@ -2,9 +2,19 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.io as pio
+from streamlit_theme import st_theme
 from util.calc_imposed_q0 import find_minimum, objective_function, objective_function_ir_ratio, objective_function_ep_rate
 
 st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_title='min(w)')
+theme = st_theme()
+if theme['base']=='dark':
+    pio.templates.default = "plotly_dark"
+    theme_st = 'streamlit'      # to handle some streamlit issue with rendering plotly template
+else:
+    pio.templates.default = "plotly"
+    theme_st = None
+
 
 
 st.write("Welcome to Page 1")
@@ -335,16 +345,6 @@ with tab_c_total:
     x_ep, y_ep, z_ep = res_ep_c.x[0], res_ep_c.x[1], res_ep_c.fun * MULTIPLIER
 
 
-    # Set the configuration for the Plotly chart, including the resolution settings
-    config = {
-        "toImageButtonOptions": {
-            "format": "png",  # The format of the exported image (png, svg, etc.)
-            "filename": "surface_plot",  # Default filename
-            # "height": 1080,  # Image height
-            # "width": 1920,   # Image width
-            "scale": 3       # Increase the resolution (scales up the image)
-        }
-    }
     contours = dict(
         x=dict(
             show=True,
@@ -427,7 +427,7 @@ with tab_c_total:
             xanchor="center",
             x=0.5,
             orientation="h"
-        )
+        ),
     )
 
 
@@ -516,6 +516,7 @@ with tab_e:
     df2[df2 < 0] = None
     df3[df3 < 0] = None
 
+
     st.write("***")
     col1, col2, col3 = st.columns((1, 1, 1))
     with col1:
@@ -528,7 +529,7 @@ with tab_e:
         st.write("Entropy production rate results:")
         st.dataframe(df3)
 
-
+    
     #========PLOT========
     fig = go.Figure()
 
@@ -563,16 +564,18 @@ with tab_e:
         ),
         legend=dict(
             yanchor="top",
-            y=1,
+            y=0.99,
             xanchor="right",
-            x=1,
-            orientation="h"
-        )
+            x=0.995,
+            orientation="h",
+            
+        ),
     )
 
 
     with col_plot:
-        st.plotly_chart(fig, use_container_width=True, config=config, key='plotly_sae')
+        st.plotly_chart(fig, use_container_width=True, config=config, key='plotly_sae', theme=theme_st)
+
 
 
 
