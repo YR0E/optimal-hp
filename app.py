@@ -1,16 +1,14 @@
 import streamlit as st
 from util.feedback import feedback_form
+from util.navigation import PAGES as PG
 
 
 # Navigation
-PAGES = [
-    st.Page("0_home.py", title="Home", icon=":material/home:"),
-    st.Page("1_imposed_q0.py", title="Imposed q0: min(w)", icon=":material/function:"),
-    st.Page("2_imposed_w0.py", title="Imposed w0: max(q)", icon=":material/function:"),
-    st.Page("3_imposed_COP0.py", title="Imposed COP0: max(q)", icon=":material/function:")
+pages = [
+    st.Page(PG['page'][i], title=PG['title'][i], icon=PG['icon'][i]) for i in range(len(PG))
 ]
 
-pg = st.navigation(PAGES)
+pg = st.navigation(pages)
 pg.run()
 
 

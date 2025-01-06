@@ -5,6 +5,8 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from streamlit_theme import st_theme
 from util.calc_imposed_q0 import find_minimum, objective_function, objective_function_ir_ratio, objective_function_ep_rate
+from util.navigation import link_to_pages
+
 
 st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_title='min(w)')
 theme = st_theme()
@@ -22,9 +24,7 @@ st.warning("Work in progress...")
 st.markdown('***')
 
 st.markdown("### Navigation:")
-st.page_link("0_home.py", label="Home page", icon=":material/home:")
-st.page_link("2_imposed_w0.py", label="Imposed w0: Find maximum heat extraction max(q)", icon=":material/function:")
-st.page_link("3_imposed_COP0.py", label="Imposed COP0: Find maximum heat extraction max(q)", icon=":material/function:")
+link_to_pages(pages=[0, 2, 3])
 
 
 #============MAIN==============
