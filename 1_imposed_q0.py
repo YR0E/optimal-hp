@@ -8,7 +8,7 @@ from util.calc_imposed_q0 import find_minimum, objective_function, objective_fun
 
 st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_title='min(w)')
 theme = st_theme()
-if theme['base']=='dark':
+if theme is not None and theme['base']=='dark':
     pio.templates.default = "plotly_dark"
     theme_st = 'streamlit'      # to handle some streamlit issue with rendering plotly template
 else:
@@ -56,7 +56,7 @@ DEFAULT_VALUES_C = {
 }
 DEFAULT_VALUES_SA_E = {
     'e_t_sae': (1.0, 4.0),
-    'c_t_sae': 0.5,
+    'c_t_sae': 0.7,
     'q0_sae': 10.0,
     't_s_sae': 0.9,
     'I_sae': 1.1,
