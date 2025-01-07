@@ -1,4 +1,5 @@
 import streamlit as st
+from util.navigation import link_to_pages
 
 st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_title='optimizer by Yelnar')
 
@@ -9,18 +10,16 @@ st.write("This is the home page content.")
 st.warning("Will be updated soon...")
 st.info(r'''
         Ready to use:
-        - Curzon-Ahlborn : imposed $q_0 - \varepsilon_{total}$    
+        - Imposed $q_0$ page    
         - Feedback section  
         ''')
-
 st.markdown('***')
+
 
 st.markdown("### Navigation:")
-st.page_link("1_imposed_q0.py", label="Imposed q0: Find minimum power consumption min(w)", icon=":material/function:")
-st.page_link("2_imposed_w0.py", label="Imposed w0: Find maximum heat extraction max(q)", icon=":material/function:")
-st.page_link("3_imposed_COP0.py", label="Imposed COP0: Find maximum heat extraction max(q)", icon=":material/function:")
-
-
+link_to_pages(pages=[1, 2, 3])
 st.markdown('***')
+
+
 st.title("About")
 st.write("This is the about section.")

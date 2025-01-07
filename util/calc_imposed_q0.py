@@ -85,6 +85,17 @@ def constraint(x, initial_var_total, config):
 
 
 def find_minimum(_obj_function, initial_params, config):
+    """
+    Finds the minimum of the objective function for a given configuration.
+
+    Parameters:
+    - _obj_function: Objective function to minimize (e.g., objective_function).
+    - initial_params: Tuple containing initial parameters for the minimization.
+    - config: String specifying the configuration ('e', 'c', 'sae').
+
+    Returns:
+    - result: Optimization result object from scipy.optimize.minimize.
+    """
     if config=='e':
         initial_eps_total = initial_params[2]
 
@@ -127,3 +138,25 @@ def find_minimum(_obj_function, initial_params, config):
     result = minimize(_obj_function, x0, args=(initial_params, config), 
                       bounds=bnds, constraints=cons, tol=10**(-16))
     return result
+
+
+
+def find_minimum_vectorized(obj_func, e_total, opt_var, *params):
+    """
+    Vectorizes the find_minimum function for a given objective function.
+    
+    Parameters:
+    - obj_func: Objective function to minimize (e.g., objective_function).
+    - e_total: Array of values over which to minimize.
+    - opt_var: Optimization variable (e.g., 'e', 'c', 'sae').
+    - *params: Additional parameters passed to the objective function.
+    
+    Returns:
+    - result: Array of results for each value in e_total.
+    """
+    def wrapper(e_t, opt_var, *params):
+        initial_params = (e_t, *params)
+        return find_minimum(obj_func, initial_params, opt_var)
+    
+    vectorized_func = np.vectorize(wrapper, excluded=[1, 2])  # Exclude opt_var and params
+    return vectorized_func(e_total, opt_var, *params)
