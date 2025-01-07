@@ -10,7 +10,7 @@ st.write("This is the home page content.")
 st.warning("Will be updated soon...")
 st.info(r'''
         Ready to use:
-        - Curzon-Ahlborn : imposed $q_0 - \varepsilon_{total}$    
+        - Imposed $q_0$ page    
         - Feedback section  
         ''')
 st.markdown('***')

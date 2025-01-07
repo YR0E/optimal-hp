@@ -21,5 +21,14 @@ PAGES = {
 
 
 def link_to_pages(pages):
+    """
+    Links to pages for navigation.
+
+    Parameters
+    ----------
+    pages : list
+        A list of page numbers to link to.
+    """
+    
     for page in pages:
         st.page_link(PAGES['page'][page], label=PAGES['label'][page], icon=PAGES['icon'][page])

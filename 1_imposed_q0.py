@@ -4,7 +4,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 from streamlit_theme import st_theme
-from util.calc_imposed_q0 import find_minimum, objective_function, objective_function_ir_ratio, objective_function_ep_rate
+from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized
+from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate
 from util.plot import plotting3D, plotting_sensitivity
 from util.navigation import link_to_pages
 
@@ -54,30 +55,53 @@ DEFAULT_VALUES_C = {
     'I_c': 1.01,
     's_c': 0.1
 }
-DEFAULT_VALUES_SA_E = {
-    'e_t_sae': (1.0, 4.0),
-    'c_t_sae': 0.7,
-    'q0_sae': 10.0,
-    't_s_sae': 0.9,
-    'I_sae': 1.1,
-    's_sae': 1.1
-}
 
 def init_session_state(default):
+    """
+    Initializes the session state with default values if they are not already set.
+
+    Parameters:
+    - default (dict): A dictionary of default values, where each key is the name 
+      of the session state variable, and each value is the default value to set.
+    """
+
     for key, value in default.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
 def reset_sliders(default):
+    """
+    Resets all slider values to their default values.
+
+    Parameters:
+    - default (dict): A dictionary of default values, keyed by the session state key.
+    """
+    
     for key, value in default.items():
         st.session_state[key] = value
 
 def init_slider(varname, key, minval, maxval, step, fmt="%.2f", help=None):
+    """
+    Initializes a slider.
+
+    Parameters:
+    - varname (str): The display name for the slider variable.
+    - key (str): The unique key for the slider in the Streamlit session state.
+    - minval (float): The minimum value the slider can take.
+    - maxval (float): The maximum value the slider can take.
+    - step (float): The step size for slider increments.
+    - fmt (str, optional): The format string for displaying slider values. Default is "%.2f".
+    - help (str, optional): A tooltip that provides additional information about the slider.
+
+    Returns:
+    - slider_val: The value of the slider.
+    """
+
     col1, col2 = st.columns((0.15, 0.85))
     col1.markdown(varname, help=help)
-    init_val = col2.slider(label=key, label_visibility="collapsed", key=key,
+    slider_val = col2.slider(label=key, label_visibility="collapsed", key=key,
                            min_value=minval, max_value=maxval, step=step, format=fmt)
-    return init_val
+    return slider_val
 
 
 st.info(r'Choose a variable $(\varepsilon_{total}$ or $c_{total})$ to minimize $f(w)$')
@@ -204,6 +228,42 @@ st.markdown('## Sensitivity analysis')
 st.markdown('Text about...')
 
 
+DEFAULT_VALUES_SA_E = {
+    'e_t_sae': (1.0, 4.0),
+    'c_t_sae': 0.7,
+    'q0_sae': 10.0,
+    't_s_sae': 0.9,
+    'I_sae': 1.1,
+    's_sae': 1.1
+}
+def results_to_df(results, param, param_name):
+    """
+    Converts optimization results into a list of DataFrames.
+    
+    Parameters:
+        results (dict): Dictionary containing optimization results.
+        param (list): List of parameter values.
+        param_name (str): Name of the parameter (used as index).
+        
+    Returns:
+        list: A list containing DataFrames for each key in the results dictionary.
+    """
+    dataframes = []
+    columns = [param_name, 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
+    
+    for key, result_list in results.items():
+        df = pd.DataFrame.from_records(
+            [(e, r.fun * MULTIPLIER, *r.x) for e, r in zip(param, result_list)],
+            columns=columns
+        ).set_index(param_name)
+        
+        # Set values out of range (<0 or >1000) to None (to handle optimization errors)
+        df[(df < 0) | (df > 1000)] = None
+        dataframes.append(df)
+    
+    return dataframes
+
+
 st.info(r'Choose a variable/parameter to analyse its impact on the minimum power consumption $min(w)$')
 tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$', 
                                                     '&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
@@ -212,26 +272,6 @@ tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$
                                                     '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'])
 
     # Define a wrapper for vectorized call
-def find_minimum_of_(e_t, opt_var):
-    # Dynamically construct initial_params for each `e_t`
-    initial_params = (e_t, init_c_t, init_q, init_t_s, MULTIPLIER)
-    return find_minimum(objective_function, initial_params, opt_var)
-
-def find_minimum_ofir_(e_t, opt_var):
-    # Dynamically construct initial_params for each `e_t`
-    initial_params_ir = (e_t, init_c_t, init_q, init_t_s, init_I, MULTIPLIER)
-    return find_minimum(objective_function_ir_ratio, initial_params_ir, opt_var)
-
-def find_minimum_ofep_(e_t, opt_var):
-    # Dynamically construct initial_params for each `e_t`
-    initial_params_ep = (e_t, init_c_t, init_q, init_t_s, init_s, MULTIPLIER)
-    return find_minimum(objective_function_ep_rate, initial_params_ep, opt_var)
-
-# Vectorize the wrapper function
-find_minimum_v = np.vectorize(find_minimum_of_)
-find_minimum_ir_v = np.vectorize(find_minimum_ofir_)
-find_minimum_ep_v = np.vectorize(find_minimum_ofep_)
-
 
 with tab_e:
     init_session_state(DEFAULT_VALUES_SA_E)
@@ -250,35 +290,23 @@ with tab_e:
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_E), key='btn_sae')
 
-    e_total = np.arange(init_eps_t[0], init_eps_t[1]+0.1, 0.1)
-    result, result_ir, result_ep = np.zeros((3, len(e_total)), dtype='object')
-    minw, minw_ir, minw_ep = np.zeros((3, len(e_total)))
-    res, res_ir, res_ep = np.zeros((3, len(e_total)))
-    
+    step_size = 0.1
+    e_total = np.arange(init_eps_t[0], init_eps_t[1]+step_size, step_size)
+    initial_params = {
+        'r': [init_c_t, init_q, init_t_s, MULTIPLIER],
+        'ir': [init_c_t, init_q, init_t_s, init_I, MULTIPLIER],
+        'ep': [init_c_t, init_q, init_t_s, init_s, MULTIPLIER]
+    }
 
-    # Call the vectorized function
+    # Perform optimization
     with st.spinner("Calculating..."):
         opt_var = 'sae'
-        result = find_minimum_v(e_total, opt_var)
-        result_ir = find_minimum_ir_v(e_total, opt_var)
-        result_ep = find_minimum_ep_v(e_total, opt_var)
-    
-    df1 = pd.DataFrame.from_records(
-        [(e, r.fun * MULTIPLIER, *r.x) for e, r in zip(e_total, result)],
-        columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
-    ).set_index('ε_t')
-    df2 = pd.DataFrame.from_records(
-        [(e, r.fun * MULTIPLIER, *r.x) for e, r in zip(e_total, result_ir)],
-        columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
-    ).set_index('ε_t')
-    df3 = pd.DataFrame.from_records(
-        [(e, r.fun * MULTIPLIER, *r.x) for e, r in zip(e_total, result_ep)],
-        columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
-    ).set_index('ε_t')
-    df1[(df1 < 0) & (df1 > 1000)] = None
-    df2[(df2 < 0) & (df2 > 1000)] = None
-    df3[(df3 < 0) & (df3 > 1000)] = None
-
+        results = {
+            'r': find_minimum_vectorized(objective_function, e_total, opt_var, *initial_params['r']),
+            'ir': find_minimum_vectorized(objective_function_ir_ratio, e_total, opt_var, *initial_params['ir']),
+            'ep': find_minimum_vectorized(objective_function_ep_rate, e_total, opt_var, *initial_params['ep']),
+        }
+        df1, df2, df3 = results_to_df(results, e_total, 'ε_t')
 
 
     with col_plot:

@@ -22,16 +22,41 @@ SCOPES = [
 
 @st.cache_resource
 def get_google_sheet():
-    """Initialize and cache the Google Sheets client and worksheet."""
+    """
+    Initialize and cache the Google Sheets client and worksheet.
+    
+    This function establishes a connection to Google Sheets using service account credentials
+    and returns the first worksheet of the "Feedback" spreadsheet.
+
+    Returns:
+        gspread.models.Spreadsheet: The first worksheet of the "Feedback" spreadsheet.
+    """
+    # Load credentials from Streamlit secrets
     credentials = Credentials.from_service_account_info(
         st.secrets["gcp_service_account"], scopes=SCOPES
     )
+    
+    # Authorize the client using the credentials
     client = gspread.authorize(credentials)
-    return client.open("Feedback").sheet1  # Access the first sheet
+    
+    # Open the "Feedback" spreadsheet and access the first sheet
+    return client.open("Feedback").sheet1
 
 
 def validate_and_submit_feedback(sheet, feedback_data):
-    # Validate the feedback form inputs and submit data to Google Sheets.
+    """
+    Validate feedback inputs and submit them to a Google Sheets document.
+
+    Parameters:
+    - sheet (gspread.models.Spreadsheet): The Google Sheets worksheet to append the feedback data to.
+    - feedback_data (list): A list containing feedback details, including submitting date, name, 
+      section type, feedback type, and comments.
+
+    This function checks if the name and feedback type fields are filled. If either is missing, 
+    a warning is displayed to the user. If both fields are filled, the function attempts to append 
+    the feedback data to the specified Google Sheets document. A success message is shown upon 
+    successful submission, or an error message is displayed if the submission fails.
+    """
 
     name = feedback_data[1]
     type = feedback_data[3]
@@ -48,6 +73,13 @@ def validate_and_submit_feedback(sheet, feedback_data):
 
 
 def feedback_form():
+    """
+    Render a Streamlit form for submitting user feedback.
+
+    This function displays a Streamlit form with input fields for the user's name, feedback type, and comments.
+    The form is wrapped in a Streamlit expander with a heading of "Drop a line here".
+    The function also retrieves the cached Google Sheet to write the feedback data to.
+    """
     st.markdown("## Feedback")
     with st.expander("Drop a line here", expanded=True):
         with st.form(key="feedback_form", clear_on_submit=True, border=False):

@@ -6,6 +6,23 @@ from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio
 
 
 def plotting3D(res, initial_params, opt_var):
+    """
+    Plots a 3D surface chart using Plotly based on the optimization results.
+
+    Parameters:
+    - res: Dictionary containing optimization results for different configurations ('r', 'ir', 'ep').
+    - initial_params: Dictionary containing initial parameters including 'r', 'ir', 'ep'.
+    - opt_var: String specifying the optimization variable ('e' or 'c').
+
+    This function creates a 3D plot with surfaces representing different objectives:
+    - Reversibility
+    - Irreversibility Ratio
+    - Entropy Production Rate
+
+    It also plots the constraint line and highlights the minimum points on the surfaces.
+    The plot configuration supports high-resolution image export.
+    """
+
     MULTIPLIER = initial_params['r'][-1]
     POWER_OF_10 = np.log10(MULTIPLIER)
   
@@ -164,6 +181,15 @@ def plotting3D(res, initial_params, opt_var):
 
 
 def plotting_sensitivity(data, labels, power, theme_session):
+    """
+    Plot the minimum power consumption for different parameters.
+    
+    Parameters:
+    data (list of pd.DataFrame): DataFrames with columns 'minw''.
+    labels (list of str): Labels for the different data sets.
+    power (float): Power of 10 to scale the y-axis.
+    theme_session (str): Streamlit theme session name.
+    """
     fig = go.Figure()
 
     for df, label in zip(data, labels):
