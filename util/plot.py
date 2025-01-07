@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import plotly.io as pio
-from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate
+from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate 
 
 
 def plotting3D(res, initial_params, opt_var):
@@ -160,3 +160,36 @@ def plotting3D(res, initial_params, opt_var):
     )
 
     st.plotly_chart(fig, use_container_width=True, config=config)
+
+
+
+def plotting_sensitivity(data, labels, power, theme_session):
+    fig = go.Figure()
+
+    for df, label in zip(data, labels):
+        fig.add_trace(go.Scatter(
+            x=df.index, y=df.minw,
+            mode='lines',
+            name=label, showlegend=True
+        ))
+    
+    fig.update_layout(
+        title="Plot",
+        autosize=True,
+        margin=dict(l=10, r=10, b=10, t=40),
+        xaxis=dict(
+            title='<i>ε<sub>total</sub></i>',
+            title_font=dict(family='STIX Two Math', size=14)
+        ),
+        yaxis=dict(
+            title=f'<i>min(w) · 10<sup>−{power:.0f}</sup></i>',
+            title_font=dict(family='STIX Two Math', size=14)
+        ),
+        legend=dict(
+            yanchor="top", y=0.99,
+            xanchor="right", x=0.995,
+            orientation="h"
+        )
+    )
+
+    st.plotly_chart(fig, use_container_width=True, theme=theme_session)

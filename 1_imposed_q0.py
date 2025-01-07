@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from streamlit_theme import st_theme
 from util.calc_imposed_q0 import find_minimum, objective_function, objective_function_ir_ratio, objective_function_ep_rate
-from util.plot import plotting3D
+from util.plot import plotting3D, plotting_sensitivity
 from util.navigation import link_to_pages
 
 
@@ -13,11 +13,10 @@ st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_title='
 theme = st_theme()
 if theme is not None and theme['base']=='dark':
     pio.templates.default = "plotly_dark"
-    theme_st = 'streamlit'      # to handle some streamlit issue with rendering plotly template
+    theme_session = 'streamlit'      # to handle some streamlit issue with rendering plotly template
 else:
     pio.templates.default = "plotly"
-    theme_st = None
-
+    theme_session = None
 
 
 st.write("Welcome to Page 1")
@@ -213,20 +212,25 @@ tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$
                                                     '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'])
 
     # Define a wrapper for vectorized call
-def find_minimum_of_(e_t, config):
+def find_minimum_of_(e_t, opt_var):
     # Dynamically construct initial_params for each `e_t`
     initial_params = (e_t, init_c_t, init_q, init_t_s, MULTIPLIER)
-    return find_minimum(objective_function, initial_params, config)
+    return find_minimum(objective_function, initial_params, opt_var)
 
-def find_minimum_ofir_(e_t, config):
+def find_minimum_ofir_(e_t, opt_var):
     # Dynamically construct initial_params for each `e_t`
     initial_params_ir = (e_t, init_c_t, init_q, init_t_s, init_I, MULTIPLIER)
     return find_minimum(objective_function_ir_ratio, initial_params_ir, opt_var)
 
-def find_minimum_ofep_(e_t, config):
+def find_minimum_ofep_(e_t, opt_var):
     # Dynamically construct initial_params for each `e_t`
     initial_params_ep = (e_t, init_c_t, init_q, init_t_s, init_s, MULTIPLIER)
     return find_minimum(objective_function_ep_rate, initial_params_ep, opt_var)
+
+# Vectorize the wrapper function
+find_minimum_v = np.vectorize(find_minimum_of_)
+find_minimum_ir_v = np.vectorize(find_minimum_ofir_)
+find_minimum_ep_v = np.vectorize(find_minimum_ofep_)
 
 
 with tab_e:
@@ -251,10 +255,6 @@ with tab_e:
     minw, minw_ir, minw_ep = np.zeros((3, len(e_total)))
     res, res_ir, res_ep = np.zeros((3, len(e_total)))
     
-    # Vectorize the wrapper function
-    find_minimum_v = np.vectorize(find_minimum_of_)
-    find_minimum_ir_v = np.vectorize(find_minimum_ofir_)
-    find_minimum_ep_v = np.vectorize(find_minimum_ofep_)
 
     # Call the vectorized function
     with st.spinner("Calculating..."):
@@ -263,88 +263,44 @@ with tab_e:
         result_ir = find_minimum_ir_v(e_total, opt_var)
         result_ep = find_minimum_ep_v(e_total, opt_var)
     
-    res = [(e_total[i], result[i].fun*MULTIPLIER, *result[i].x) for i in range(len(result))]
-    res_ir = [(e_total[i], result_ir[i].fun*MULTIPLIER, *result_ir[i].x) for i in range(len(result_ir))]
-    res_ep = [(e_total[i], result_ep[i].fun*MULTIPLIER, *result_ep[i].x) for i in range(len(result_ep))]
+    df1 = pd.DataFrame.from_records(
+        [(e, r.fun * MULTIPLIER, *r.x) for e, r in zip(e_total, result)],
+        columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
+    ).set_index('ε_t')
+    df2 = pd.DataFrame.from_records(
+        [(e, r.fun * MULTIPLIER, *r.x) for e, r in zip(e_total, result_ir)],
+        columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
+    ).set_index('ε_t')
+    df3 = pd.DataFrame.from_records(
+        [(e, r.fun * MULTIPLIER, *r.x) for e, r in zip(e_total, result_ep)],
+        columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
+    ).set_index('ε_t')
+    df1[(df1 < 0) & (df1 > 1000)] = None
+    df2[(df2 < 0) & (df2 > 1000)] = None
+    df3[(df3 < 0) & (df3 > 1000)] = None
 
-    df1 = pd.DataFrame(res, columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p'])
-    df2 = pd.DataFrame(res_ir, columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p'])
-    df3 = pd.DataFrame(res_ep, columns=['ε_t', 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p'])
-    df1 = df1.set_index('ε_t')
-    df2 = df2.set_index('ε_t')
-    df3 = df3.set_index('ε_t')
-    df1[df1 < 0] = None
-    df2[df2 < 0] = None
-    df3[df3 < 0] = None
-
-
-    st.write("***")
-    col1, col2, col3 = st.columns((1, 1, 1))
-    with col1:
-        st.write("Reversibility results:")
-        st.dataframe(df1)
-    with col2:
-        st.write("Irreversibility ratio results:")
-        st.dataframe(df2)
-    with col3:
-        st.write("Entropy production rate results:")
-        st.dataframe(df3)
-
-    
-    #========PLOT========
-    config = {
-        "toImageButtonOptions": {
-            "format": "png",  # The format of the exported image (png, svg, etc.)
-            "filename": "surface_plot",  # Default filename
-            # "height": 1080,  # Image height
-            # "width": 1920,   # Image width
-            "scale": 3       # Increase the resolution (scales up the image)
-        }
-    }
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(
-        x=df1.index, y=df1.minw,
-        mode='lines',
-        name='reversibility', showlegend=True,
-    ))
-    fig.add_trace(go.Scatter(
-        x=df2.index, y=df2.minw,
-        mode='lines',
-        name='irreversibilty ratio', showlegend=True,
-    ))
-    fig.add_trace(go.Scatter(
-        x=df3.index, y=df3.minw,
-        mode='lines',
-        name='entropy production rate', showlegend=True,
-    ))
-
-    fig.update_layout(
-        title=dict(text='Plot'), 
-        autosize=False,
-        width=600, height=420,
-        margin=dict(l=10, r=10, b=10, t=40),
-        xaxis=dict(
-            title='<i>ε<sub>total</sub></i>',
-            title_font=dict(family='STIX Two Math', size=14)
-        ),
-        yaxis=dict(
-            title=f'<i>min(w) · 10<sup>−{POWER_OF_10:.0f}</sup></i>',
-            title_font=dict(family='STIX Two Math', size=14)
-        ),
-        legend=dict(
-            yanchor="top",
-            y=0.99,
-            xanchor="right",
-            x=0.995,
-            orientation="h",
-            
-        ),
-    )
 
 
     with col_plot:
-        st.plotly_chart(fig, use_container_width=True, config=config, key='plotly_sae', theme=theme_st)
+        plotting_sensitivity(
+            [df1, df2, df3], 
+            ['reversibility', 'irreversibility ratio', 'entropy production rate'], 
+            POWER_OF_10,
+            theme_session
+        )
+
+
+    st.write('#### Results')
+    col1, col2, col3 = st.columns((1, 1, 1))
+    with col1:
+        st.write("Reversibility:")
+        st.dataframe(df1, height=210)
+    with col2:
+        st.write("Irreversibility ratio:")
+        st.dataframe(df2, height=210)
+    with col3:
+        st.write("Entropy production rate:")
+        st.dataframe(df3, height=210)
 
 
 
