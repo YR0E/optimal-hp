@@ -28,12 +28,7 @@ st.markdown("### Navigation:")
 link_to_pages(pages=[0, 2, 3])
 
 
-#============MAIN==============
-st.markdown('***')
-st.markdown("## Minimum power consumption")
-st.markdown('Text about...')
-
-
+#==========PREP for MAIN CALCULATION===========
 # Initialize session state for the slider values
 MULTIPLIER = 10**4
 POWER_OF_10 = np.log10(MULTIPLIER)
@@ -103,14 +98,13 @@ def init_slider(varname, key, minval, maxval, step, fmt="%.2f", help=None):
                            min_value=minval, max_value=maxval, step=step, format=fmt)
     return slider_val
 
-
-st.info(r'Choose a variable $(\varepsilon_{total}$ or $c_{total})$ to minimize $f(w)$')
-tab_eps_total, tab_c_total = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$'])
-
-#===========EPS_TOTAL================
-with tab_eps_total:
+@st.fragment
+def tab_eps_total_plane():
     init_session_state(DEFAULT_VALUES_EPS)
+
+    #=====INFO=====
     st.write(r"Curzon-Ahlborn model: imposed $q_0 - \varepsilon_{total}$: find minimum power consumption $\min(w)$")
+
 
     col_control, _, col_plot = st.columns((0.34, 0.02, 0.64))
 
@@ -152,7 +146,7 @@ with tab_eps_total:
     with col_plot:
         plotting3D(results, initial_params, opt_var)
 
-
+    #=====RESULT INFO=====
     st.write('#### Results:')
     df = pd.DataFrame({
         'I': [np.NaN, init_I, np.NaN],
@@ -167,12 +161,13 @@ with tab_eps_total:
     )
     st.dataframe(df)
 
-
-
-#===========C_TOTAL================
-with tab_c_total:
+@st.fragment
+def tab_c_total_plane():
     init_session_state(DEFAULT_VALUES_C)
+
+    #=====INFO=====
     st.write("Curzon-Ahlborn model: imposed $q_0 - c_{total}$: find minimum power consumption $\min(w)$")
+
 
     col_control, _, col_plot = st.columns((0.34, 0.02, 0.64))
 
@@ -205,9 +200,12 @@ with tab_c_total:
     }
 
 
+    #=====PLOT=====
     with col_plot:
         plotting3D(results, initial_params, opt_var)
 
+
+    #=====RESULT INFO=====
     st.write('#### Results:')
     df = pd.DataFrame({
         'I': [np.NaN, init_I, np.NaN],
@@ -221,13 +219,23 @@ with tab_c_total:
     st.dataframe(df)
 
 
-
-#=========SENSITIVITY ANALYSIS================
+#============MAIN CALCULATION==============
 st.markdown('***')
-st.markdown('## Sensitivity analysis')
+st.markdown("## Minimum power consumption")
 st.markdown('Text about...')
 
+st.info(r'Choose a variable $(\varepsilon_{total}$ or $c_{total})$ to minimize $f(w)$')
+tab_eps_total, tab_c_total = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$'])
 
+with tab_eps_total:
+    tab_eps_total_plane()
+
+with tab_c_total:
+    tab_c_total_plane()
+
+
+
+#=========PREP for SENSITIVITY ANALYSIS==========
 DEFAULT_VALUES_SA_E = {
     'e_t_sae': (1.0, 4.0),
     'c_t_sae': 0.7,
@@ -263,17 +271,8 @@ def results_to_df(results, param, param_name):
     
     return dataframes
 
-
-st.info(r'Choose a variable/parameter to analyse its impact on the minimum power consumption $min(w)$')
-tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$', 
-                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
-                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$t_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
-                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$I$&nbsp;&nbsp;&nbsp;&nbsp;', 
-                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'])
-
-    # Define a wrapper for vectorized call
-
-with tab_e:
+@st.fragment
+def tab_e_total_sa():
     init_session_state(DEFAULT_VALUES_SA_E)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
@@ -331,7 +330,22 @@ with tab_e:
         st.dataframe(df3, height=210)
 
 
+#==============SENSITIVITY ANALYSIS==============
+st.markdown('***')
+st.markdown('## Sensitivity analysis')
+st.markdown('Text about...')
 
+st.info(r'Choose a variable/parameter to analyse its impact on the minimum power consumption $min(w)$')
+tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$', 
+                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$t_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$I$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'])
+
+    # Define a wrapper for vectorized call
+
+with tab_e:
+    tab_e_total_sa()
 
 with tab_c:
     st.write('c')
