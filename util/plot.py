@@ -113,7 +113,7 @@ def plotting3D(res, initial_params, opt_var):
         'opacity': 0.75, 
         'showlegend': True, 
         'showscale': False, 
-        'contours': contours
+        'contours': contours,
     }
 
     fig = go.Figure()
@@ -122,37 +122,58 @@ def plotting3D(res, initial_params, opt_var):
         name='reversibility', 
         legendgroup='reversibility', 
         colorscale='Viridis', 
-        **common_surface_props
+        **common_surface_props,
+        hovertemplate="<b style='color:red;'>reversibility</b><br>" + 
+                  "x: %{x}<br>" +
+                  "y: %{y}<br>" +
+                  "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Surface(
         z=Z_ir,  
         name='irreversibility ratio', 
         legendgroup='irreversibility',
         colorscale='RdBu_r', 
-        **common_surface_props
+        **common_surface_props,
+        hovertemplate="<b style='color:red;'>irreversibility ratio</b><br>" + 
+                    "x: %{x}<br>" +
+                    "y: %{y}<br>" +
+                    "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Surface(
         z=Z_ep,  
         name='entropy production rate', 
         legendgroup='entropy production', 
         colorscale='rdylgn_r', 
-        **common_surface_props
+        **common_surface_props,
+        hovertemplate="<b style='color:red;'>entropy production rate</b><br>" + 
+                    "x: %{x}<br>" +
+                    "y: %{y}<br>" +
+                    "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Surface(
         z=Z_line, x=X_line, y=Y_line, 
         name='constraint', legendgroup='constraint', 
         colorscale=[[0, 'red'], [1, 'red']], showlegend=True, showscale=False, opacity=0.1,
+        hovertemplate="<b style='color:gray;'>constrain</b><br>" + 
+                    "x: %{x}<br>" +
+                    "y: %{y}<br>" +
+                    "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Scatter3d(
         x=x_min, y=y_min, z=z_min,
         mode='markers',
         name='minimum', showlegend=True,
         marker=dict(size=5, color='red', symbol='circle'),
+        hovertemplate="<b style='color:red;'>minimum</b><br>" + 
+                    "x: %{x}<br>" +
+                    "y: %{y}<br>" +
+                    "z: %{z}<extra></extra>"
     ))
 
     fig.update_layout(
         title=dict(text='3D Plot'), 
         autosize=True,
+        height=510,
         margin=dict(l=10, r=10, b=10, t=40),
         scene=dict(
             xaxis_title=f'<i>{var_name}<sub>g</sub></i>',
@@ -173,7 +194,8 @@ def plotting3D(res, initial_params, opt_var):
             xanchor="center",
             x=0.5,
             orientation="h"
-        )
+        ),
+        
     )
 
     st.plotly_chart(fig, use_container_width=True, config=config)
@@ -215,7 +237,8 @@ def plotting_sensitivity(data, labels, power, theme_session):
             yanchor="top", y=0.99,
             xanchor="right", x=0.995,
             orientation="h"
-        )
+        ),
+        hovermode='x',
     )
 
     st.plotly_chart(fig, use_container_width=True, theme=theme_session)
