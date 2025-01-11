@@ -240,6 +240,15 @@ def plotting_sensitivity(data, labels, power, theme_session):
         'displaylogo': False
     }
 
+    varname = data[0].index.name
+    if varname[0] in ['c', 'ε']:    
+        x_title = f'<i>{varname[0]}<sub>total</sub></i>'
+    elif varname[0] in ['q', 't']:
+        x_title = f'<i>{varname[0]}<sub>{varname[-1]}</sub></i>'
+    else:
+        x_title = f'<i>{varname}</i>'
+
+
     for df, label, color in zip(data, labels, color_cycle):
         fig.add_trace(go.Scatter(
             x=df.index, y=df.minw,
@@ -277,7 +286,7 @@ def plotting_sensitivity(data, labels, power, theme_session):
         autosize=True,
         margin=dict(l=10, r=10, b=10, t=40),
         xaxis=dict(
-            title='<i>ε<sub>total</sub></i>',
+            title=x_title,
             title_font=DEFAULT_FONT,
             title_standoff=10
         ),
@@ -290,7 +299,7 @@ def plotting_sensitivity(data, labels, power, theme_session):
         yaxis2=dict(
             title='<i>c*<sub>g</sub></i>',
             title_font=DEFAULT_FONT,
-            title_standoff=5
+            title_standoff=10
         ),
         yaxis3=dict(
             title='<i>ε*<sub>g</sub></i>',
@@ -309,8 +318,9 @@ def plotting_sensitivity(data, labels, power, theme_session):
     )
 
     fig.update_xaxes(
-        title_text='<i>ε<sub>total</sub></i>',
+        title_text=x_title,
         title_font=DEFAULT_FONT,
+        title_standoff=10,
         row=2, col=2 
     )
 
