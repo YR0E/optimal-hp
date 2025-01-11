@@ -72,6 +72,7 @@ def validate_and_submit_feedback(sheet, feedback_data):
                 st.error(f"Error updating Google Sheets: {e}")
 
 
+@st.fragment
 def feedback_form():
     """
     Render a Streamlit form for submitting user feedback.

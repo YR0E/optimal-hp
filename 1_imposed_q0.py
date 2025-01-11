@@ -229,7 +229,7 @@ with tab_c_total:
 
 #=========PREP for SENSITIVITY ANALYSIS==========
 DEFAULT_VALUES_SA_E = {
-    'e_t_sae': (1.0, 4.0),
+    'e_t_sae': (2.0, 4.0),
     'c_t_sae': 0.7,
     'q0_sae': 10.0,
     't_s_sae': 0.9,
@@ -238,7 +238,7 @@ DEFAULT_VALUES_SA_E = {
 }
 DEFAULT_VALUES_SA_C = {
     'e_t_sac': 2.0,
-    'c_t_sac': (0.2, 1.0),
+    'c_t_sac': (0.4, 1.0),
     'q0_sac': 10.0,
     't_s_sac': 0.9,
     'I_sac': 1.1,
@@ -247,7 +247,7 @@ DEFAULT_VALUES_SA_C = {
 DEFAULT_VALUES_SA_Q = {
     'e_t_saq': 2.0,
     'c_t_saq': 0.5,
-    'q0_saq': (1.0, 100.0),
+    'q0_saq': (10.0, 80.0),
     't_s_saq': 0.9,
     'I_saq': 1.1,
     's_saq': 1.1
@@ -256,7 +256,7 @@ DEFAULT_VALUES_SA_T = {
     'e_t_sat': 2.0,
     'c_t_sat': 0.5,
     'q0_sat': 10.0,
-    't_s_sat': (0.8, 1.0),
+    't_s_sat': (0.85, 0.95),
     'I_sat': 1.1,
     's_sat': 1.1
 }
@@ -265,14 +265,14 @@ DEFAULT_VALUES_SA_I = {
     'c_t_sai': 0.5,
     'q0_sai': 10.0,
     't_s_sai': 0.9,
-    'I_sai': (1.0, 3.0),
+    'I_sai': (1.0, 2.0),
 }
 DEFAULT_VALUES_SA_S = {
     'e_t_sas': 2.0,
     'c_t_sas': 0.5,
     'q0_sas': 10.0,
     't_s_sas': 0.9,
-    's_sas': (0.0, 50.0),
+    's_sas': (0.0, 25.0),
 }
 def results_to_df(results, param, param_name):
     """
@@ -320,7 +320,7 @@ def tab_e_total_sa():
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_E), key='btn_sae')
 
     step_size = 0.1
-    e_total = np.arange(init_eps_t[0], init_eps_t[1]+step_size, step_size)
+    e_total = np.arange(init_eps_t[0], init_eps_t[1]+0.0001, step_size)
     initial_params = {
         'r': [init_c_t, init_q, init_t_s, MULTIPLIER],
         'ir': [init_c_t, init_q, init_t_s, init_I, MULTIPLIER],
@@ -376,8 +376,8 @@ def tab_c_total_sa():
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_C), key='btn_sac')
 
-    step_size = 0.02
-    c_total = np.arange(init_c_t[0], init_c_t[1]+step_size, step_size)
+    step_size = 0.025
+    c_total = np.arange(init_c_t[0], init_c_t[1]+0.0001, step_size)
     initial_params = {
         'r': [init_eps_t, init_q, init_t_s, MULTIPLIER],
         'ir': [init_eps_t, init_q, init_t_s, init_I, MULTIPLIER],
@@ -423,7 +423,7 @@ def tab_q0_sa():
     
     #========SLIDERS========
     with col_control:
-        init_q = init_slider('$q_{0}:$', 'q0_saq', 1.0, 100.0, 0.1, fmt="%.1f",
+        init_q = init_slider('$q_{0}:$', 'q0_saq', 0.0, 100.0, 0.1, fmt="%.1f",
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_saq', 0.4, 4.0, 0.01)
         init_c_t = init_slider('$c_{total}:$', 'c_t_saq', 0.1, 1.0, 0.01)
@@ -434,8 +434,8 @@ def tab_q0_sa():
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_Q), key='btn_saq')
 
-    step_size = 1.0
-    q0 = np.arange(init_q[0], init_q[1]+0.001, step_size)
+    step_size = 2.0
+    q0 = np.arange(init_q[0], init_q[1]+0.0001, step_size)
     initial_params = {
         'r': [init_eps_t, init_c_t, init_t_s, MULTIPLIER],
         'ir': [init_eps_t, init_c_t, init_t_s, init_I, MULTIPLIER],
@@ -494,7 +494,7 @@ def tab_ts_sa():
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_T), key='btn_sat')
 
     step_size = 0.005
-    t_s = np.arange(init_t_s[0], init_t_s[1]+step_size, step_size)
+    t_s = np.arange(init_t_s[0], init_t_s[1]+0.0001, step_size)
     initial_params = {
         'r': [init_eps_t, init_c_t, init_q, MULTIPLIER],
         'ir': [init_eps_t, init_c_t, init_q, init_I, MULTIPLIER],
@@ -596,7 +596,7 @@ def tab_s_sa():
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_S), key='btn_sas')
 
     step_size = 0.5
-    s = np.arange(init_s[0], init_s[1]+step_size, step_size)
+    s = np.arange(init_s[0], init_s[1]+0.0001, step_size)
     initial_params = {
         'ep': [init_eps_t, init_c_t, init_q, init_t_s, MULTIPLIER],
     }
