@@ -311,7 +311,7 @@ def tab_e_total_sa():
     with col_plot:
         plotting_sensitivity(
             [df1, df2, df3], 
-            ['reversibility', 'irreversibility ratio', 'entropy production rate'], 
+            ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
             POWER_OF_10,
             theme_session
         )
