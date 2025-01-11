@@ -289,7 +289,7 @@ def tab_e_total_sa():
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_E), key='btn_sae')
 
-    step_size = 0.1
+    step_size = 0.05
     e_total = np.arange(init_eps_t[0], init_eps_t[1]+step_size, step_size)
     initial_params = {
         'r': [init_c_t, init_q, init_t_s, MULTIPLIER],
@@ -311,7 +311,7 @@ def tab_e_total_sa():
     with col_plot:
         plotting_sensitivity(
             [df1, df2, df3], 
-            ['reversibility', 'irreversibility ratio', 'entropy production rate'], 
+            ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
             POWER_OF_10,
             theme_session
         )

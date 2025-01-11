@@ -1,9 +1,12 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import plotly.io as pio
+from plotly.subplots import make_subplots
+from plotly.colors import DEFAULT_PLOTLY_COLORS
 from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate 
 
+# Set default layout settings for axes title fonts
+DEFAULT_FONT = dict(family='STIX Two Math', size=14)
 
 def plotting3D(res, initial_params, opt_var):
     """
@@ -179,9 +182,9 @@ def plotting3D(res, initial_params, opt_var):
             xaxis_title=f'<i>{var_name}<sub>g</sub></i>',
             yaxis_title=f'<i>{var_name}<sub>p</sub></i>',
             zaxis_title=f'<i>w · 10<sup>−{POWER_OF_10:.0f}</sup></i>',
-            xaxis_title_font=dict(family='STIX Two Math'),
-            yaxis_title_font=dict(family='STIX Two Math'),
-            zaxis_title_font=dict(family='STIX Two Math'),
+            xaxis_title_font=DEFAULT_FONT,
+            yaxis_title_font=DEFAULT_FONT,
+            zaxis_title_font=DEFAULT_FONT,
             # aspectratio=dict(x=1, y=1, z=1),
             aspectmode='cube',
             camera=dict(
@@ -204,22 +207,70 @@ def plotting3D(res, initial_params, opt_var):
 
 def plotting_sensitivity(data, labels, power, theme_session):
     """
-    Plot the minimum power consumption for different parameters.
-    
-    Parameters:
-    data (list of pd.DataFrame): DataFrames with columns 'minw''.
-    labels (list of str): Labels for the different data sets.
-    power (float): Power of 10 to scale the y-axis.
-    theme_session (str): Streamlit theme session name.
-    """
-    fig = go.Figure()
+    Plots sensitivity analysis of optimization results and optima.
 
-    for df, label in zip(data, labels):
+    Parameters:
+    data (list of pd.DataFrame): DataFrames containing the results with columns 'minw', 'c*_g', and 'ε*_g'.
+    labels (list of str): List of labels for the different data sets.
+    power (float): Power of 10 to scale the y-axis.
+    theme_session (str): Streamlit theme session name for consistent UI styling.
+    """
+
+    fig = make_subplots(
+        rows=2, cols=2,
+        specs=[[{"rowspan": 2}, {}],
+            [None, {}]],
+        shared_xaxes=True,
+        # subplot_titles=("First-row Subplot","Second-row Subplots", None,  None),
+        vertical_spacing=0.08,
+        horizontal_spacing=0.1
+    )
+
+    color_cycle = DEFAULT_PLOTLY_COLORS[:len(labels)]  # Get as many colors as labels
+    # Set the configuration for the Plotly chart, including the resolution settings
+    config = {
+        "toImageButtonOptions": {
+            "format": "png",  # The format of the exported image (png, svg, etc.)
+            "filename": "sensitivity_plot",  # Default filename
+            # "height": 1080,  # Image height
+            # "width": 1920,   # Image width
+            "scale": 3       # Increase the resolution (scales up the image)
+        },
+        'modeBarButtonsToRemove': ['zoomIn', 'zoomOut'],
+        'displaylogo': False
+    }
+
+    for df, label, color in zip(data, labels, color_cycle):
         fig.add_trace(go.Scatter(
             x=df.index, y=df.minw,
             mode='lines',
-            name=label, showlegend=True
-        ))
+            line=dict(color=color),
+            name=label, legendgroup=label,
+            showlegend=True,
+
+            ), row=1, col=1
+        )
+
+    for df, label, color in zip(data, labels, color_cycle):
+        fig.add_trace(go.Scatter(
+            x=df.index, y=df['c*_g'],
+            mode='lines',
+            line=dict(color=color),
+            name=label, legendgroup=label, 
+            showlegend=False,
+            
+            ), row=1, col=2
+        )
+
+    for df, label, color in zip(data, labels, color_cycle):
+        fig.add_trace(go.Scatter(
+            x=df.index, y=df['ε*_g'],
+            mode='lines',
+            line=dict(color=color),
+            name=label, legendgroup=label, 
+            showlegend=False,
+            ), row=2, col=2
+        )
     
     fig.update_layout(
         title="Plot",
@@ -227,18 +278,40 @@ def plotting_sensitivity(data, labels, power, theme_session):
         margin=dict(l=10, r=10, b=10, t=40),
         xaxis=dict(
             title='<i>ε<sub>total</sub></i>',
-            title_font=dict(family='STIX Two Math', size=14)
+            title_font=DEFAULT_FONT,
+            title_standoff=10
         ),
+
         yaxis=dict(
             title=f'<i>min(w) · 10<sup>−{power:.0f}</sup></i>',
-            title_font=dict(family='STIX Two Math', size=14)
+            title_font=DEFAULT_FONT,
+            title_standoff=10
+        ),
+        yaxis2=dict(
+            title='<i>c<sup>*</sup></i>',
+            title_font=DEFAULT_FONT,
+            title_standoff=5
+        ),
+        yaxis3=dict(
+            title='<i>ε<sup>*</sup></i>',
+            title_font=DEFAULT_FONT,
+            title_standoff=10
         ),
         legend=dict(
-            yanchor="top", y=0.99,
-            xanchor="right", x=0.995,
-            orientation="h"
+            yanchor="top", y=1.1,
+            xanchor="center", x=0.5,
+            orientation="h",
+            
         ),
+        hoversubplots="axis",
         hovermode='x',
+        xaxis3={"matches": "x"},
     )
 
-    st.plotly_chart(fig, use_container_width=True, theme=theme_session)
+    fig.update_xaxes(
+        title_text='<i>ε<sub>total</sub></i>',
+        title_font=DEFAULT_FONT,
+        row=2, col=2 
+    )
+
+    st.plotly_chart(fig, use_container_width=True, config=config, theme=theme_session)
