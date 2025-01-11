@@ -181,7 +181,7 @@ def plotting3D(res, initial_params, opt_var):
         scene=dict(
             xaxis_title=f'<i>{var_name}<sub>g</sub></i>',
             yaxis_title=f'<i>{var_name}<sub>p</sub></i>',
-            zaxis_title=f'<i>w · 10<sup>−{POWER_OF_10:.0f}</sup></i>',
+            zaxis_title=f'<i>w</i> · 10<sup>−{POWER_OF_10:.0f}</sup>',
             xaxis_title_font=DEFAULT_FONT,
             yaxis_title_font=DEFAULT_FONT,
             zaxis_title_font=DEFAULT_FONT,
@@ -283,17 +283,17 @@ def plotting_sensitivity(data, labels, power, theme_session):
         ),
 
         yaxis=dict(
-            title=f'<i>min(w) · 10<sup>−{power:.0f}</sup></i>',
+            title=f'<i>min(w)</i> · 10<sup>−{power:.0f}</sup>',
             title_font=DEFAULT_FONT,
             title_standoff=10
         ),
         yaxis2=dict(
-            title='<i>c<sup>*</sup></i>',
+            title='<i>c*<sub>g</sub></i>',
             title_font=DEFAULT_FONT,
             title_standoff=5
         ),
         yaxis3=dict(
-            title='<i>ε<sup>*</sup></i>',
+            title='<i>ε*<sub>g</sub></i>',
             title_font=DEFAULT_FONT,
             title_standoff=10
         ),
