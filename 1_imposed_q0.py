@@ -673,8 +673,3 @@ if st.button("Analyze", type="primary"):
         sensitivity_analysis()
 
         st.toast('Sensitivity analysis done!', icon=':material/done_all:')
-
-
-st.markdown('***')
-st.markdown("### Navigation:")
-link_to_pages(pages=[0, 2, 3])
