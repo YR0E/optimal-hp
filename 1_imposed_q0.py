@@ -7,25 +7,21 @@ from streamlit_theme import st_theme
 from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized
 from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate
 from util.plot import plotting3D, plotting_sensitivity
-from util.navigation import link_to_pages
+# from util.navigation import link_to_pages
 
 
 st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_title='min(w)')
+
 theme = st_theme()
+dark_mode = False
 if theme is not None and theme['base']=='dark':
+    dark_mode = True
     pio.templates.default = "plotly_dark"
-    theme_session = 'streamlit'      # to handle some streamlit issue with rendering plotly template
+    theme_session = 'streamlit'    # to handle some streamlit issue with rendering plotly template
 else:
     pio.templates.default = "plotly"
     theme_session = None
 
-
-st.write("Welcome to Page 1")
-st.warning("Work in progress...")
-st.markdown('***')
-
-st.markdown("### Navigation:")
-link_to_pages(pages=[0, 2, 3])
 
 
 #==========PREP for MAIN CALCULATION===========
@@ -210,7 +206,10 @@ def tab_c_total_plane():
 
 
 #============MAIN CALCULATION==============
-st.markdown('***')
+_, col_img, _ = st.columns([1, 6, 1])
+image_path = "img/gshp-dark.png" if dark_mode else "img/gshp.png"
+
+col_img.image(image_path, caption="Ground source heat pump")
 st.markdown("## Minimum power consumption")
 st.markdown('Text about...')
 
@@ -624,53 +623,60 @@ def tab_s_sa():
     st.write("Entropy production rate:")
     st.dataframe(df1, height=210)
 
+@st.fragment
+def sensitivity_analysis():
+    st.info(r'Choose a variable/parameter to analyze its impact on the minimum power consumption $min(w)$')
+    tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$', 
+                                                        '&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                        '&nbsp;&nbsp;&nbsp;&nbsp;$t_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                        '&nbsp;&nbsp;&nbsp;&nbsp;$I$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                        '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'])
+
+
+    with tab_e:
+        st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $\varepsilon_{total}$, with parameters $c_{total}$, $q_0$, $t_0$, $I$, and $s$.  
+                    Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
+                    ''')
+        tab_e_total_sa()
+
+    with tab_c:
+        st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $c_{total}$, with parameters $\varepsilon_{total}$, $q_0$, $t_0$, $I$, and $s$.  
+                    Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
+                    ''')
+        tab_c_total_sa()
+
+    with tab_q:
+        st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $q_0$, with parameters $\varepsilon_{total}$, $c_{total}$, $t_0$, $I$, and $s$.  
+                    Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
+                    ''')
+        tab_q0_sa()
+
+    with tab_t:
+        st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $t_s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, $I$, and $s$.  
+                    Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
+                    ''')
+        tab_ts_sa()
+
+    with tab_i:
+        st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $I$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
+                    Parameter $I$ is for the irreversibility ratio.
+                    ''')
+        tab_i_sa()
+
+    with tab_s:
+        st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
+                    Parameter $s$ is for the entropy production rate.
+                    ''')
+        tab_s_sa()
 
 
 #==============SENSITIVITY ANALYSIS==============
 st.markdown('***')
 st.markdown('## Sensitivity analysis')
-st.markdown('Text about...')
+st.markdown('Here you can perform a sensitivity analysis.')
 
-st.info(r'Choose a variable/parameter to analyse its impact on the minimum power consumption $min(w)$')
-tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$', 
-                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
-                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$t_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
-                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$I$&nbsp;&nbsp;&nbsp;&nbsp;', 
-                                                    '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'])
+if st.button("Analyze", type="primary"):
+    with st.spinner("Calculating..."):
+        sensitivity_analysis()
 
-
-with tab_e:
-    st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $\varepsilon_{total}$, with parameters $c_{total}$, $q_0$, $t_0$, $I$, and $s$.  
-                Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
-                ''')
-    tab_e_total_sa()
-
-with tab_c:
-    st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $c_{total}$, with parameters $\varepsilon_{total}$, $q_0$, $t_0$, $I$, and $s$.  
-                Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
-                ''')
-    tab_c_total_sa()
-
-with tab_q:
-    st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $q_0$, with parameters $\varepsilon_{total}$, $c_{total}$, $t_0$, $I$, and $s$.  
-                Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
-                ''')
-    tab_q0_sa()
-
-with tab_t:
-    st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $t_s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, $I$, and $s$.  
-                Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
-                ''')
-    tab_ts_sa()
-
-with tab_i:
-    st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $I$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
-                Parameter $I$ is for the irreversibility ratio.
-                ''')
-    tab_i_sa()
-
-with tab_s:
-    st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
-                Parameter $s$ is for the entropy production rate.
-                ''')
-    tab_s_sa()
+        st.toast('Sensitivity analysis done!', icon=':material/done_all:')
