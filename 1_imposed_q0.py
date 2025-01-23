@@ -1,7 +1,7 @@
+import timeit
 import streamlit as st
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 import plotly.io as pio
 from streamlit_theme import st_theme
 from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized
@@ -119,7 +119,7 @@ def tab_eps_total_plane():
         # reset = col_btn2.form_submit_button("Reset", on_click=reset_sliders)
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_EPS))
 
-
+    start = timeit.default_timer()
     # Perform optimization
     initial_params = {
         'r': [init_c_g, init_c_p, init_eps_total, init_q, init_t_s, MULTIPLIER],
@@ -132,6 +132,8 @@ def tab_eps_total_plane():
         'ir': find_minimum(objective_function_ir_ratio, initial_params['ir'], opt_var),
         'ep': find_minimum(objective_function_ep_rate, initial_params['ep'], opt_var)
     }
+    stop = timeit.default_timer()
+    st.write(f'Optimization took {stop - start:.4f} seconds.')
 
     #=====PLOT=====
     with col_plot:
@@ -326,6 +328,7 @@ def tab_e_total_sa():
         'ep': [init_c_t, init_q, init_t_s, init_s, MULTIPLIER]
     }
 
+    start = timeit.default_timer()
     # Perform optimization
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'e')
@@ -335,6 +338,9 @@ def tab_e_total_sa():
             'ep': find_minimum_vectorized(objective_function_ep_rate, e_total, opt_config, *initial_params['ep']),
         }
         df1, df2, df3 = results_to_df(results, e_total, 'ε_t')
+    stop = timeit.default_timer()
+    st.write(f"Analysis took: {stop - start:.4f} seconds")
+    st.write(f"Each calc took: {(stop - start)/(len(e_total)):.4f} seconds")
 
     with col_plot:
         plotting_sensitivity(
