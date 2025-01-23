@@ -7,14 +7,17 @@ from streamlit_theme import st_theme
 from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized
 from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate
 from util.plot import plotting3D, plotting_sensitivity
-from util.navigation import link_to_pages
+# from util.navigation import link_to_pages
 
 
 st.set_page_config(layout='wide', initial_sidebar_state='expanded', page_title='min(w)')
+
 theme = st_theme()
+dark_mode = False
 if theme is not None and theme['base']=='dark':
+    dark_mode = True
     pio.templates.default = "plotly_dark"
-    theme_session = 'streamlit'      # to handle some streamlit issue with rendering plotly template
+    theme_session = 'streamlit'    # to handle some streamlit issue with rendering plotly template
 else:
     pio.templates.default = "plotly"
     theme_session = None
@@ -203,6 +206,10 @@ def tab_c_total_plane():
 
 
 #============MAIN CALCULATION==============
+_, col_img, _ = st.columns([1, 6, 1])
+image_path = "img/gshp-dark.png" if dark_mode else "img/gshp.png"
+
+col_img.image(image_path, caption="Ground source heat pump")
 st.markdown("## Minimum power consumption")
 st.markdown('Text about...')
 
