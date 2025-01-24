@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import plotly.io as pio
 from streamlit_theme import st_theme
-from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized
+from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized, find_minimum_warm_start
 from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate
 from util.plot import plotting3D, plotting_sensitivity
 # from util.navigation import link_to_pages
@@ -336,6 +336,22 @@ def tab_e_total_sa():
             'r': find_minimum_vectorized(objective_function, e_total, opt_config, *initial_params['r']),
             'ir': find_minimum_vectorized(objective_function_ir_ratio, e_total, opt_config, *initial_params['ir']),
             'ep': find_minimum_vectorized(objective_function_ep_rate, e_total, opt_config, *initial_params['ep']),
+        }
+        df1, df2, df3 = results_to_df(results, e_total, 'ε_t')
+    stop = timeit.default_timer()
+    st.write(f"Analysis took: {stop - start:.4f} seconds")
+    st.write(f"Each calc took: {(stop - start)/(len(e_total)):.4f} seconds")
+
+
+    #### kinda faster, but can have issue with wrong prev optima values
+    start = timeit.default_timer()
+    # Perform optimization
+    with st.spinner("Calculating..."):
+        opt_config = ('sa', 'e')
+        results = {
+            'r': find_minimum_warm_start(objective_function, e_total, opt_config, *initial_params['r']),
+            'ir': find_minimum_warm_start(objective_function_ir_ratio, e_total, opt_config, *initial_params['ir']),
+            'ep': find_minimum_warm_start(objective_function_ep_rate, e_total, opt_config, *initial_params['ep']),
         }
         df1, df2, df3 = results_to_df(results, e_total, 'ε_t')
     stop = timeit.default_timer()
