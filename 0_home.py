@@ -19,13 +19,6 @@ st.info(r'''
         - Imposed $q_0$ page    
         - Feedback section  
         ''')
-st.markdown('***')
-st.title("About")
-st.write("Here will be some information about the project.")
-
-_, col_img, _ = st.columns([1, 6, 1])
-image_path = "img/gshp-dark.png" if dark_mode else "img/gshp.png"
-col_img.image(image_path, caption="Ground source heat pump")
 
 st.markdown('***')
 st.title("About")
