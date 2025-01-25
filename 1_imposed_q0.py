@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import plotly.io as pio
 from streamlit_theme import st_theme
-from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized, find_minimum_warm_start
+from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized, find_minimum_loop, find_minimum_warm_start
 from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate
 from util.plot import plotting3D, plotting_sensitivity
 # from util.navigation import link_to_pages
@@ -275,7 +275,7 @@ DEFAULT_VALUES_SA_S = {
     't_s_sas': 0.9,
     's_sas': (0.0, 25.0),
 }
-def results_to_df(results, param, param_name):
+def results_to_df(results, param, param_name, fix=True):
     """
     Converts optimization results into a list of DataFrames.
     
@@ -296,8 +296,9 @@ def results_to_df(results, param, param_name):
             columns=columns
         ).set_index(param_name)
         
-        # Set values out of range (<0 or >1000) to None (to handle optimization errors)
-        df[(df < 0) | (df > 1000)] = None
+        # Set values out of range (<0 or >9999) to None (to handle optimization errors)
+        if fix:
+            df[(df < 0) | (df > 9999)] = None
         dataframes.append(df)
     
     return dataframes
@@ -328,6 +329,16 @@ def tab_e_total_sa():
         'ep': [init_c_t, init_q, init_t_s, init_s, MULTIPLIER]
     }
 
+    with st.spinner("Calculating..."):
+        opt_config = ('sa', 'e')
+        results = {
+            'r': find_minimum_vectorized(objective_function, e_total[:5], opt_config, *initial_params['r']),
+            'ir': find_minimum_vectorized(objective_function_ir_ratio, e_total[:5], opt_config, *initial_params['ir']),
+            'ep': find_minimum_vectorized(objective_function_ep_rate, e_total[:5], opt_config, *initial_params['ep']),
+        }
+        
+
+    # np.vectorized
     start = timeit.default_timer()
     # Perform optimization
     with st.spinner("Calculating..."):
@@ -337,13 +348,27 @@ def tab_e_total_sa():
             'ir': find_minimum_vectorized(objective_function_ir_ratio, e_total, opt_config, *initial_params['ir']),
             'ep': find_minimum_vectorized(objective_function_ep_rate, e_total, opt_config, *initial_params['ep']),
         }
+        df4, df5, df6 = results_to_df(results, e_total, 'ε_t')
+    stop = timeit.default_timer()
+    st.write(f"Vect took: {stop - start:.4f} seconds. Each calc took: {(stop - start)/(len(e_total)):.4f} seconds")
+    
+    
+    # for loop
+    start = timeit.default_timer()
+    # Perform optimization
+    with st.spinner("Calculating..."):
+        opt_config = ('sa', 'e')
+        results = {
+            'r': find_minimum_loop(objective_function, e_total, opt_config, *initial_params['r']),
+            'ir': find_minimum_loop(objective_function_ir_ratio, e_total, opt_config, *initial_params['ir']),
+            'ep': find_minimum_loop(objective_function_ep_rate, e_total, opt_config, *initial_params['ep']),
+        }
         df1, df2, df3 = results_to_df(results, e_total, 'ε_t')
     stop = timeit.default_timer()
-    st.write(f"Analysis took: {stop - start:.4f} seconds")
-    st.write(f"Each calc took: {(stop - start)/(len(e_total)):.4f} seconds")
+    st.write(f"Loop took: {stop - start:.4f} seconds. Each calc took: {(stop - start)/(len(e_total)):.4f} seconds")
 
 
-    #### kinda faster, but can have issue with wrong prev optima values
+    # warm start loop
     start = timeit.default_timer()
     # Perform optimization
     with st.spinner("Calculating..."):
@@ -353,14 +378,30 @@ def tab_e_total_sa():
             'ir': find_minimum_warm_start(objective_function_ir_ratio, e_total, opt_config, *initial_params['ir']),
             'ep': find_minimum_warm_start(objective_function_ep_rate, e_total, opt_config, *initial_params['ep']),
         }
-        df1, df2, df3 = results_to_df(results, e_total, 'ε_t')
+        df11, df22, df33 = results_to_df(results, e_total, 'ε_t')
     stop = timeit.default_timer()
-    st.write(f"Analysis took: {stop - start:.4f} seconds")
-    st.write(f"Each calc took: {(stop - start)/(len(e_total)):.4f} seconds")
+    st.write(f"Warm took: {stop - start:.4f} seconds. Each calc took: {(stop - start)/(len(e_total)):.4f} seconds")
+
+
+
+    st.write('Difference in minw:', (df1['minw']-df4['minw']).mean(), (df2['minw']-df5['minw']).mean(), (df3['minw']-df6['minw']).mean())
+    st.write('Difference in minw - warmstart:', (df1['minw']-df11['minw']).mean(), (df2['minw']-df22['minw']).mean(), (df3['minw']-df33['minw']).mean())
+
+    temp_df = pd.concat([df1['minw'], df11['minw'], df2['minw'], df22['minw'], df3['minw'], df33['minw']], axis=1, keys=['loop', 'warm', 'loop-ir', 'warm-ir', 'loop-ep', 'warm-ep'])
+    temp_df['diff'] = temp_df['warm'] - temp_df['loop']
+    temp_df['diff-ir'] = temp_df['warm-ir'] - temp_df['loop-ir']
+    temp_df['diff-ep'] = temp_df['warm-ep'] - temp_df['loop-ep']
+
+    left, right = st.columns(2)
+    left.line_chart(temp_df[['loop', 'warm', 'loop-ir', 'warm-ir']], y_label='minw')
+    right.line_chart(temp_df[['diff', 'diff-ir', 'diff-ep']], y_label='difference')
+    
+    st.write(temp_df)
+
 
     with col_plot:
         plotting_sensitivity(
-            [df1, df2, df3], 
+            [df11, df22, df33], 
             ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
             POWER_OF_10,
             theme_session

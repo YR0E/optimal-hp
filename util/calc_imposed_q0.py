@@ -106,45 +106,46 @@ def find_minimum(_obj_func, initial_params, config):
         args=(initial_params, config),
         bounds=bounds,
         constraints=constraints,
-        method='SLSQP',
+        # method='SLSQP',
         tol=1e-16,
     )
     return result
 
 
 
-# def find_minimum_vectorized(obj_func, opt_var, opt_config, *params):
-#     """
-#     Vectorizes the find_minimum function for a given objective function.
-    
-#     Parameters:
-#     - obj_func: Objective function to minimize (e.g., objective_function).
-#     - opt_var: Array of values over which to minimize.
-#     - opt_config: Optimization configuration (e.g., ('sa', 'e')).
-#     - *params: Additional parameters passed to the objective function.
-    
-#     Returns:
-#     - result: Array of results for each value in opt_var.
-#     """
-#     def wrapper(var, opt_config, *params):
-#         if opt_config[1] == 'e':
-#             initial_params = (var, *params)
-#         elif opt_config[1] == 'c':
-#             initial_params = (params[0], var, *params[1:])
-#         elif opt_config[1] == 'q':
-#             initial_params = (*params[:2], var, *params[2:])
-#         elif opt_config[1] == 't':
-#             initial_params = (*params[:3], var, *params[3:])
-#         elif opt_config[1] in ['I', 's']:
-#             initial_params = (*params[:4], var, params[-1])
-
-#         return find_minimum(obj_func, initial_params, opt_config)
-    
-#     vectorized_func = np.vectorize(wrapper, excluded=[1, 2])  # Exclude opt_var and params
-#     return vectorized_func(opt_var, opt_config, *params)
-
-
 def find_minimum_vectorized(obj_func, opt_var, opt_config, *params):
+    """
+    Vectorizes the find_minimum function for a given objective function.
+    
+    Parameters:
+    - obj_func: Objective function to minimize (e.g., objective_function).
+    - opt_var: Array of values over which to minimize.
+    - opt_config: Optimization configuration (e.g., ('sa', 'e')).
+    - *params: Additional parameters passed to the objective function.
+    
+    Returns:
+    - result: Array of results for each value in opt_var.
+    """
+    def wrapper(var, opt_config, *params):
+        if opt_config[1] == 'e':
+            initial_params = (var, *params)
+        elif opt_config[1] == 'c':
+            initial_params = (params[0], var, *params[1:])
+        elif opt_config[1] == 'q':
+            initial_params = (*params[:2], var, *params[2:])
+        elif opt_config[1] == 't':
+            initial_params = (*params[:3], var, *params[3:])
+        elif opt_config[1] in ['I', 's']:
+            initial_params = (*params[:4], var, params[-1])
+
+        return find_minimum(obj_func, initial_params, opt_config)
+    
+    vectorized_func = np.vectorize(wrapper, excluded=[1, 2])  # Exclude opt_var and params
+    return vectorized_func(opt_var, opt_config, *params)
+
+
+
+def find_minimum_loop(obj_func, opt_var, opt_config, *params):
     """
     Vectorized version of the find_minimum function.
     """
@@ -172,9 +173,8 @@ def find_minimum_warm_start(obj_func, opt_var, opt_config, *params):
     as the initial guess for the next.
     """
     results = []
-    x0 = None  # Initial guess (will be updated iteratively)
 
-    for var in opt_var:
+    for i, var in enumerate(opt_var):
         if opt_config[1] == 'e':
             initial_params = (var, *params)
         elif opt_config[1] == 'c':
@@ -187,8 +187,8 @@ def find_minimum_warm_start(obj_func, opt_var, opt_config, *params):
             initial_params = (*params[:4], var, params[-1])
 
         # Use the previous result as the initial guess
-        if x0 is not None:
-            x0 = result.x  # Update initial guess with the previous result
+        if (i > 0 and results[i-1].success):
+            x0 = results[i-1].x  # Update initial guess with the previous result
             _, bounds, constraints = create_bounds_and_constraints(opt_config, initial_params)
         else:
             x0, bounds, constraints = create_bounds_and_constraints(opt_config, initial_params)
@@ -196,7 +196,7 @@ def find_minimum_warm_start(obj_func, opt_var, opt_config, *params):
         # Perform minimization
         result = minimize(
             obj_func,
-            x0 if x0 is not None else [0.5] * len(opt_var),  # Default initial guess
+            x0,
             args=(initial_params, opt_config),
             bounds=bounds,
             constraints=constraints,
