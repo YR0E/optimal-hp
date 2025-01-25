@@ -4,8 +4,26 @@ from scipy.optimize import minimize
 
 def parse_config(x, initial_params, config):
     """
-    Extracts variables and parameters based on the configuration.
+    Parse input variables and parameters based on the given configuration.
+    
+    Parameters:
+    x (list): Variables to be optimized.
+    initial_params (list): Parameters' initial values for the optimization.
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, 
+                  and 'sa' for sensitivity analysis.
+    
+    Returns:
+    e_i (float): Effectiveness of the i HX.
+    c_i (float): Flow capacity of the i circuit.
+    e_t (float): Total effectiveness of HX.
+    q0 (float): Imposed heat extraction.
+    t_s (float): Temperature.
+    others (list): Other parameters (I, s, etc).
+    
+    Raises:
+    ValueError: If the configuration string is not supported.
     """
+
     if config == 'e':
         e_g, e_p, e_ev, e_cd = x     # variables
         c_g, c_p, e_t, q0, t_s, *others = initial_params
@@ -24,8 +42,20 @@ def parse_config(x, initial_params, config):
 
 def create_bounds_and_constraints(config, initial_total):
     """
-    Creates bounds and constraints based on configuration.
+    Creates initial guesses, bounds, and constraints for the optimization problem
+    based on the given configuration.
+
+    Parameters:
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, 
+                  and 'sa' for sensitivity analysis.
+    initial_total (list or float): Initial values for the 'total' variables.
+
+    Returns:
+    x0 (list): Initial guesses for the variables.
+    bounds (list): Bounds for the variables.
+    constraints (list): Constraints for the optimization problem.
     """
+    
     if config == 'e':
         x0 = [0.5] * 4
         bounds = [(0.1, 1)] * 4
@@ -47,6 +77,18 @@ def create_bounds_and_constraints(config, initial_total):
 
 
 def objective_function(x, initial_params, config):
+    """
+    Calculates the objective function for optimization.
+
+    Parameters:
+    x (list): Values of the variables (e_g, e_p, e_ev, e_cd, c_g, c_p) .
+    initial_params (list): Parameters (e_total, c_total, q0, t_s, ...).
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
+
+    Returns:
+    float: The value of the objective function.
+    """
+
     e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others = parse_config(x, initial_params, config)
     
     q0 = q0 / others[0]  # /MULTIPLIER
@@ -57,6 +99,18 @@ def objective_function(x, initial_params, config):
 
 
 def objective_function_ir_ratio(x, initial_params, config):
+    """
+    Calculates the objective function for optimization with irreversibility ratio.
+
+    Parameters:
+    x (list): Values of the variables (e_g, e_p, e_ev, e_cd, c_g, c_p) .
+    initial_params (list): Parameters (e_total, c_total, q0, t_s, ...).
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
+
+    Returns:
+    float: The value of the objective function.
+    """
+    
     e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others = parse_config(x, initial_params, config)
     
     I = others[0]
@@ -68,6 +122,17 @@ def objective_function_ir_ratio(x, initial_params, config):
 
 
 def objective_function_ep_rate(x, initial_params, config):
+    """
+    Calculates the objective function for optimization with entropy production rate.
+
+    Parameters:
+    x (list): Values of the variables (e_g, e_p, e_ev, e_cd, c_g, c_p) .
+    initial_params (list): Parameters (e_total, c_total, q0, t_s, ...).
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
+
+    Returns:
+    float: The value of the objective function.
+    """
     e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others = parse_config(x, initial_params, config)
     
     s = others[0] / others[1]  # s / MULTIPLIER
@@ -84,10 +149,22 @@ def objective_function_ep_rate(x, initial_params, config):
     return (q0 * (c_eps*q0 + c_A - c_B*t_s) + s*t_s*e_t) / (c_B*t_s - c_eps*q0)
  
 
-def find_minimum(_obj_func, initial_params, config):
+def find_minimum(obj_func, initial_params, config):
     """
-    Finds the minimum of the objective function for a given configuration.
+    Finds the minimum of the objective function.
+
+    Parameters:
+    _obj_func (callable): Objective function to be minimized.
+    initial_params (list): Parameters (e_total, c_total, q0, t_s, ...).
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
+
+    Returns:
+    result (scipy.optimize.OptimizeResult): Result of the minimization.
+
+    Raises:
+    ValueError: If the configuration string is not supported.
     """
+
     if config == 'e':
         initial_total = initial_params[2]  # e_total
     elif config == 'c':
@@ -101,7 +178,7 @@ def find_minimum(_obj_func, initial_params, config):
 
     # Perform minimization
     result = minimize(
-        _obj_func,
+        obj_func,
         x0,
         args=(initial_params, config),
         bounds=bounds,
@@ -112,66 +189,23 @@ def find_minimum(_obj_func, initial_params, config):
     return result
 
 
-
 def find_minimum_vectorized(obj_func, opt_var, opt_config, *params):
     """
-    Vectorizes the find_minimum function for a given objective function.
-    
+    Finds the minimum of the objective function for a vector of variables.
+
     Parameters:
-    - obj_func: Objective function to minimize (e.g., objective_function).
-    - opt_var: Array of values over which to minimize.
-    - opt_config: Optimization configuration (e.g., ('sa', 'e')).
-    - *params: Additional parameters passed to the objective function.
-    
+    obj_func (callable): Objective function to be minimized.
+    opt_var (list): List of values of the variable (e.g., e_total, c_total, q0, t_s, ...).
+    opt_config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
+    *params (list): Additional parameters (e.g., I, s, ...).
+
     Returns:
-    - result: Array of results for each value in opt_var.
+    result (numpy.array): Array of the minimized function values.
+
+    Notes:
+    The function uses the previous result as the initial guess for the next iteration.
     """
-    def wrapper(var, opt_config, *params):
-        if opt_config[1] == 'e':
-            initial_params = (var, *params)
-        elif opt_config[1] == 'c':
-            initial_params = (params[0], var, *params[1:])
-        elif opt_config[1] == 'q':
-            initial_params = (*params[:2], var, *params[2:])
-        elif opt_config[1] == 't':
-            initial_params = (*params[:3], var, *params[3:])
-        elif opt_config[1] in ['I', 's']:
-            initial_params = (*params[:4], var, params[-1])
 
-        return find_minimum(obj_func, initial_params, opt_config)
-    
-    vectorized_func = np.vectorize(wrapper, excluded=[1, 2])  # Exclude opt_var and params
-    return vectorized_func(opt_var, opt_config, *params)
-
-
-
-def find_minimum_loop(obj_func, opt_var, opt_config, *params):
-    """
-    Vectorized version of the find_minimum function.
-    """
-    results = []
-    for var in opt_var:
-        if opt_config[1] == 'e':
-            initial_params = (var, *params)
-        elif opt_config[1] == 'c':
-            initial_params = (params[0], var, *params[1:])
-        elif opt_config[1] == 'q':
-            initial_params = (*params[:2], var, *params[2:])
-        elif opt_config[1] == 't':
-            initial_params = (*params[:3], var, *params[3:])
-        elif opt_config[1] in ['I', 's']:
-            initial_params = (*params[:4], var, params[-1])
-
-        result = find_minimum(obj_func, initial_params, opt_config)
-        results.append(result)  # Collect minimized function value
-    return np.array(results)
-
-
-def find_minimum_warm_start(obj_func, opt_var, opt_config, *params):
-    """
-    Optimize with warm-starting: Use the result of the previous optimization
-    as the initial guess for the next.
-    """
     results = []
 
     for i, var in enumerate(opt_var):
