@@ -1,22 +1,97 @@
 import numpy as np
-import streamlit as st
 from scipy.optimize import minimize
 
 
-def objective_function(x, initial_params, config):
-    if config=='e':
-        e_g, e_p, e_ev, e_cd = x   # variables
-        c_g, c_p, e_t, q0, t_s, MULTIPLIER = initial_params
-    elif config=='c':
-        c_g, c_p = x   # variables
-        e_g, e_p, _, q0, t_s, MULTIPLIER = initial_params
+def parse_config(x, initial_params, config):
+    """
+    Parse input variables and parameters based on the given configuration.
+    
+    Parameters:
+    x (list): Variables to be optimized.
+    initial_params (list): Parameters' initial values for the optimization.
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, 
+                  and 'sa' for sensitivity analysis.
+    
+    Returns:
+    e_i (float): Effectiveness of the i HX.
+    c_i (float): Flow capacity of the i circuit.
+    e_t (float): Total effectiveness of HX.
+    q0 (float): Imposed heat extraction.
+    t_s (float): Temperature.
+    others (list): Other parameters (I, s, etc).
+    
+    Raises:
+    ValueError: If the configuration string is not supported.
+    """
+
+    if config == 'e':
+        e_g, e_p, e_ev, e_cd = x     # variables
+        c_g, c_p, e_t, q0, t_s, *others = initial_params
+    elif config == 'c':
+        c_g, c_p = x                 # variables
+        e_g, e_p, _, q0, t_s, *others = initial_params
         e_ev, e_cd = e_g, e_p
         e_t = e_g + e_p + e_ev + e_cd
-    elif config[0]=='sa':
+    elif config[0] == 'sa':
         e_g, e_p, e_ev, e_cd, c_g, c_p = x   # variables
-        e_t, _, q0, t_s, MULTIPLIER = initial_params
+        e_t, _, q0, t_s, *others = initial_params
+    else:
+        raise ValueError(f"Unsupported config: {config}")
+    return e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others
+
+
+def create_bounds_and_constraints(config, initial_total):
+    """
+    Creates initial guesses, bounds, and constraints for the optimization problem
+    based on the given configuration.
+
+    Parameters:
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, 
+                  and 'sa' for sensitivity analysis.
+    initial_total (list or float): Initial values for the 'total' variables.
+
+    Returns:
+    x0 (list): Initial guesses for the variables.
+    bounds (list): Bounds for the variables.
+    constraints (list): Constraints for the optimization problem.
+    """
     
-    q0 = q0 / MULTIPLIER
+    if config == 'e':
+        x0 = [0.5] * 4
+        bounds = [(0.1, 1)] * 4
+        constraints = [{'type': 'ineq', 'fun': lambda x: initial_total - sum(x)}]  # sum(e_i) <= e_t
+    elif config == 'c':
+        x0 = [0.1] * 2
+        bounds = [(0.05, 0.5)] * 2
+        constraints = [{'type': 'ineq', 'fun': lambda x: initial_total - sum(x)}]  # sum(c_i) <= c_t
+    elif config[0] == 'sa':
+        x0 = [0.5] * 4 + [0.2] * 2
+        bounds = [(0, 1)] * 4 + [(0, 1)] * 2
+        constraints = [
+            {'type': 'ineq', 'fun': lambda x: initial_total[0] - sum(x[:4])},  # sum(e_i) <= e_t
+            {'type': 'ineq', 'fun': lambda x: initial_total[1] - sum(x[4:])},  # sum(c_i) <= c_t
+        ]
+    else:
+        raise ValueError(f"Unsupported config: {config}")
+    return x0, bounds, constraints
+
+
+def objective_function(x, initial_params, config):
+    """
+    Calculates the objective function for optimization.
+
+    Parameters:
+    x (list): Values of the variables (e_g, e_p, e_ev, e_cd, c_g, c_p) .
+    initial_params (list): Parameters (e_total, c_total, q0, t_s, ...).
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
+
+    Returns:
+    float: The value of the objective function.
+    """
+
+    e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others = parse_config(x, initial_params, config)
+    
+    q0 = q0 / others[0]  # /MULTIPLIER
     a_g, a_ev, a_p, a_cd = e_g / e_t, e_ev / e_t, e_p / e_t, e_cd / e_t
     c_eps = (1 / a_g + 1 / a_ev - e_t) / c_g + (1 / a_p + 1 / a_cd - e_t) / c_p
 
@@ -24,19 +99,22 @@ def objective_function(x, initial_params, config):
 
 
 def objective_function_ir_ratio(x, initial_params, config):
-    if config=='e':
-        e_g, e_p, e_ev, e_cd = x   # variables
-        c_g, c_p, e_t, q0, t_s, I, MULTIPLIER = initial_params
-    elif config=='c':
-        c_g, c_p = x   # variables
-        e_g, e_p, _, q0, t_s, I, MULTIPLIER = initial_params
-        e_ev, e_cd = e_g, e_p
-        e_t = e_g + e_p + e_ev + e_cd
-    elif config[0]=='sa':
-        e_g, e_p, e_ev, e_cd, c_g, c_p = x   # variables
-        e_t, _, q0, t_s, I, MULTIPLIER = initial_params
+    """
+    Calculates the objective function for optimization with irreversibility ratio.
+
+    Parameters:
+    x (list): Values of the variables (e_g, e_p, e_ev, e_cd, c_g, c_p) .
+    initial_params (list): Parameters (e_total, c_total, q0, t_s, ...).
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
+
+    Returns:
+    float: The value of the objective function.
+    """
     
-    q0 = q0 / MULTIPLIER
+    e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others = parse_config(x, initial_params, config)
+    
+    I = others[0]
+    q0 = q0 / others[1]  # /MULTIPLIER
     a_g, a_ev, a_p, a_cd = e_g/e_t, e_ev/e_t, e_p/e_t, e_cd/e_t
     c_eps = (1/a_g + 1/a_ev - e_t)/(c_g*I) + (1/a_p + 1/a_cd - e_t)/c_p
     
@@ -44,117 +122,93 @@ def objective_function_ir_ratio(x, initial_params, config):
 
 
 def objective_function_ep_rate(x, initial_params, config):
-    if config=='e':
-        e_g, e_p, e_ev, e_cd = x   # variables
-        c_g, c_p, e_t, q0, t_s, s, MULTIPLIER = initial_params
-    elif config=='c':
-        c_g, c_p = x   # variables
-        e_g, e_p, _, q0, t_s, s, MULTIPLIER = initial_params
-        e_ev, e_cd = e_g, e_p
-        e_t = e_g + e_p + e_ev + e_cd
-    elif config[0]=='sa':
-        e_g, e_p, e_ev, e_cd, c_g, c_p = x   # variables
-        e_t, _, q0, t_s, s, MULTIPLIER = initial_params
+    """
+    Calculates the objective function for optimization with entropy production rate.
+
+    Parameters:
+    x (list): Values of the variables (e_g, e_p, e_ev, e_cd, c_g, c_p) .
+    initial_params (list): Parameters (e_total, c_total, q0, t_s, ...).
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
+
+    Returns:
+    float: The value of the objective function.
+    """
+    e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others = parse_config(x, initial_params, config)
     
-    q0 = q0 / MULTIPLIER
-    s = s / MULTIPLIER
+    s = others[0] / others[1]  # s / MULTIPLIER
+    q0 = q0 / others[1]        # /MULTIPLIER
     a_g, a_ev, a_p, a_cd = e_g/e_t, e_ev/e_t, e_p/e_t, e_cd/e_t
-    c_eps = (1/a_g + 1/a_ev - e_t)/c_g + (1/a_p + 1/a_cd - e_t)/c_p - s*(1/a_g + 1/a_ev - e_t)*(1/a_p + 1/a_cd - e_t)/(c_p*c_g*e_t)
+    c_eps = (
+        (1/a_g + 1/a_ev - e_t)/c_g
+         + (1/a_p + 1/a_cd - e_t)/c_p
+         - s*(1/a_g + 1/a_ev - e_t)*(1/a_p + 1/a_cd - e_t)/(c_p*c_g*e_t)
+    )
     c_A = e_t - s*(1/a_g + 1/a_ev - e_t)/c_g
     c_B = e_t - s*(1/a_p + 1/a_cd - e_t)/c_p
 
     return (q0 * (c_eps*q0 + c_A - c_B*t_s) + s*t_s*e_t) / (c_B*t_s - c_eps*q0)
  
 
-def constraint(x, initial_var_total, config):
-    if config=='e':
-        # e variables
-        return initial_var_total - sum(x)
-    elif config=='c':
-        # c variables
-        return initial_var_total - sum(x)
-    
-    elif config=='sa-e':
-        # e variables
-        *x, _, _ = x
-        return initial_var_total - sum(x)
-    elif config=='sa-c':
-        # c variables
-        _, _, _, _, *x = x
-        return initial_var_total - sum(x)
-
-
-def find_minimum(_obj_function, initial_params, config):
+def find_minimum(obj_func, initial_params, config):
     """
-    Finds the minimum of the objective function for a given configuration.
+    Finds the minimum of the objective function.
 
     Parameters:
-    - _obj_function: Objective function to minimize (e.g., objective_function).
-    - initial_params: Tuple containing initial parameters for the minimization.
-    - config: String specifying the configuration ('e', 'c', 'sae').
+    _obj_func (callable): Objective function to be minimized.
+    initial_params (list): Parameters (e_total, c_total, q0, t_s, ...).
+    config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
 
     Returns:
-    - result: Optimization result object from scipy.optimize.minimize.
+    result (scipy.optimize.OptimizeResult): Result of the minimization.
+
+    Raises:
+    ValueError: If the configuration string is not supported.
     """
-    if config=='e':
-        initial_eps_total = initial_params[2]
 
-        # Initial guesses and bounds
-        x0 = [0.5, 0.5, 0.5, 0.5]
-        b = (0.1, 1)
-        bnds = (b, b, b, b)
+    if config == 'e':
+        initial_total = initial_params[2]  # e_total
+    elif config == 'c':
+        initial_total = initial_params[2]  # c_total
+    elif config[0] == 'sa':
+        initial_total = (initial_params[0], initial_params[1])  # (e_total, c_total)
+    else:
+        raise ValueError(f"Unsupported config: {config}")
 
-        # Constraints
-        con1 = {'type': 'ineq', 'fun': lambda x: constraint(x, initial_eps_total, config)}
-        cons = [con1]
-
-    elif config=='c':
-        init_c_total = initial_params[2]
-
-        # Initial guesses and bounds
-        x0 = [0.1, 0.1]
-        b = (0.05, 0.5)
-        bnds = (b, b)
-
-        # Constraints
-        con1 = {'type': 'ineq', 'fun': lambda x: constraint(x, init_c_total, config)}
-        cons = [con1]
-
-    elif config[0]=='sa':
-        initial_eps_total = initial_params[0]
-        initial_c_total = initial_params[1]
-
-        # Initial guesses and bounds
-        x0 = [0.5, 0.5, 0.5, 0.5, 0.2, 0.2]
-        b1 = (0, 1)
-        b2 = (0, 1)     # (0.05, 0.95)
-        bnds = (b1, b1, b1, b1, b2, b2)
-        con1 = {'type': 'ineq', 'fun': lambda x: constraint(x, initial_eps_total, 'sa-e')}
-        con2 = {'type': 'ineq', 'fun': lambda x: constraint(x, initial_c_total, 'sa-c')}
-        cons = [con1, con2]
-
+    x0, bounds, constraints = create_bounds_and_constraints(config, initial_total)
 
     # Perform minimization
-    result = minimize(_obj_function, x0, args=(initial_params, config), 
-                      bounds=bnds, constraints=cons, tol=10**(-16))
+    result = minimize(
+        obj_func,
+        x0,
+        args=(initial_params, config),
+        bounds=bounds,
+        constraints=constraints,
+        # method='SLSQP',
+        tol=1e-16,
+    )
     return result
-
 
 
 def find_minimum_vectorized(obj_func, opt_var, opt_config, *params):
     """
-    Vectorizes the find_minimum function for a given objective function.
-    
+    Finds the minimum of the objective function for a vector of variables.
+
     Parameters:
-    - obj_func: Objective function to minimize (e.g., objective_function).
-    - opt_var: Array of values over which to minimize.
-    - opt_config: Optimization configuration (e.g., ('sa', 'e')).
-    - *params: Additional parameters passed to the objective function.
-    
+    obj_func (callable): Objective function to be minimized.
+    opt_var (list): List of values of the variable (e.g., e_total, c_total, q0, t_s, ...).
+    opt_config (str): Configuration string. 'e' for e_total, 'c' for c_total, and 'sa' for sensitivity analysis.
+    *params (list): Additional parameters (e.g., I, s, ...).
+
     Returns:
-    - result: Array of results for each value in opt_var.
+    result (numpy.array): Array of the minimized function values.
+
+    Notes:
+    The function uses the previous result as the initial guess for the next iteration.
     """
-    def wrapper(var, opt_config, *params):
+
+    results = []
+
+    for i, var in enumerate(opt_var):
         if opt_config[1] == 'e':
             initial_params = (var, *params)
         elif opt_config[1] == 'c':
@@ -166,7 +220,23 @@ def find_minimum_vectorized(obj_func, opt_var, opt_config, *params):
         elif opt_config[1] in ['I', 's']:
             initial_params = (*params[:4], var, params[-1])
 
-        return find_minimum(obj_func, initial_params, opt_config)
-    
-    vectorized_func = np.vectorize(wrapper, excluded=[1, 2])  # Exclude opt_var and params
-    return vectorized_func(opt_var, opt_config, *params)
+        # Use the previous result as the initial guess
+        if (i > 0 and results[i-1].success):
+            x0 = results[i-1].x  # Update initial guess with the previous result
+            _, bounds, constraints = create_bounds_and_constraints(opt_config, initial_params)
+        else:
+            x0, bounds, constraints = create_bounds_and_constraints(opt_config, initial_params)
+
+        # Perform minimization
+        result = minimize(
+            obj_func,
+            x0,
+            args=(initial_params, opt_config),
+            bounds=bounds,
+            constraints=constraints,
+            tol=1e-16,
+        )
+
+        results.append(result)  # Store the minimized function value
+
+    return np.array(results)

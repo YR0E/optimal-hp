@@ -1,7 +1,7 @@
+import time
 import streamlit as st
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 import plotly.io as pio
 from streamlit_theme import st_theme
 from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized
@@ -218,10 +218,12 @@ tab_eps_total, tab_c_total = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$'])
 
 with tab_eps_total:
     st.write(r"Curzon-Ahlborn model: imposed $q_0 - \varepsilon_{total}$: find minimum power consumption $\min(w)$")
+    st.write('')
     tab_eps_total_plane()
 
 with tab_c_total:
     st.write("Curzon-Ahlborn model: imposed $q_0 - c_{total}$: find minimum power consumption $\min(w)$")
+    st.write('')
     tab_c_total_plane()
 
 
@@ -273,7 +275,7 @@ DEFAULT_VALUES_SA_S = {
     't_s_sas': 0.9,
     's_sas': (0.0, 25.0),
 }
-def results_to_df(results, param, param_name):
+def results_to_df(results, param, param_name, fix=True):
     """
     Converts optimization results into a list of DataFrames.
     
@@ -294,8 +296,9 @@ def results_to_df(results, param, param_name):
             columns=columns
         ).set_index(param_name)
         
-        # Set values out of range (<0 or >1000) to None (to handle optimization errors)
-        df[(df < 0) | (df > 1000)] = None
+        # Set values out of range (<0 or >9999) to None (to handle optimization errors)
+        if fix:
+            df[(df < 0) | (df > 9999)] = None
         dataframes.append(df)
     
     return dataframes
@@ -325,8 +328,10 @@ def tab_e_total_sa():
         'ir': [init_c_t, init_q, init_t_s, init_I, MULTIPLIER],
         'ep': [init_c_t, init_q, init_t_s, init_s, MULTIPLIER]
     }
+ 
 
     # Perform optimization
+    start = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'e')
         results = {
@@ -335,6 +340,14 @@ def tab_e_total_sa():
             'ep': find_minimum_vectorized(objective_function_ep_rate, e_total, opt_config, *initial_params['ep']),
         }
         df1, df2, df3 = results_to_df(results, e_total, 'ε_t')
+    
+    st.markdown(
+                f"""
+                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                """, 
+                unsafe_allow_html=True
+    )
+
 
     with col_plot:
         plotting_sensitivity(
@@ -383,7 +396,9 @@ def tab_c_total_sa():
         'ep': [init_eps_t, init_q, init_t_s, init_s, MULTIPLIER]
     }
     
+
     # Perform optimization
+    start = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'c')
         results = {
@@ -392,6 +407,13 @@ def tab_c_total_sa():
             'ep': find_minimum_vectorized(objective_function_ep_rate, c_total, opt_config, *initial_params['ep']),
         }
         df1, df2, df3 = results_to_df(results, c_total, 'c_t')
+
+    st.markdown(
+                f"""
+                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                """, 
+                unsafe_allow_html=True
+    )
 
 
     with col_plot:
@@ -443,6 +465,7 @@ def tab_q0_sa():
 
     
     # Perform optimization
+    start = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'q')
         results = {
@@ -451,6 +474,13 @@ def tab_q0_sa():
             'ep': find_minimum_vectorized(objective_function_ep_rate, q0, opt_config, *initial_params['ep']),
         }
         df1, df2, df3 = results_to_df(results, q0, 'q0')
+
+    st.markdown(
+                f"""
+                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                """, 
+                unsafe_allow_html=True
+    )
 
 
     with col_plot:
@@ -502,6 +532,7 @@ def tab_ts_sa():
 
     
     # Perform optimization
+    start = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 't')
         results = {
@@ -510,6 +541,13 @@ def tab_ts_sa():
             'ep': find_minimum_vectorized(objective_function_ep_rate, t_s, opt_config, *initial_params['ep']),
         }
         df1, df2, df3 = results_to_df(results, t_s, 't_s')
+
+    st.markdown(
+                f"""
+                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                """, 
+                unsafe_allow_html=True
+    )
 
 
     with col_plot:
@@ -555,13 +593,22 @@ def tab_i_sa():
         'ir': [init_eps_t, init_c_t, init_q, init_t_s, MULTIPLIER],
     }
 
+
     # Perform optimization
+    start = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'I')
         results = {
             'ir': find_minimum_vectorized(objective_function_ir_ratio, I, opt_config, *initial_params['ir']),
         }
         df1,  = results_to_df(results, I, 'I')
+
+    st.markdown(
+                f"""
+                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                """, 
+                unsafe_allow_html=True
+    )
 
 
     with col_plot:
@@ -602,12 +649,20 @@ def tab_s_sa():
 
 
     # Perform optimization
+    start = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 's')
         results = {
             'ep': find_minimum_vectorized(objective_function_ep_rate, s, opt_config, *initial_params['ep']),
         }
         df1,  = results_to_df(results, s, 's')
+
+    st.markdown(
+                f"""
+                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                """, 
+                unsafe_allow_html=True
+    )
 
 
     with col_plot:
@@ -637,36 +692,42 @@ def sensitivity_analysis():
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $\varepsilon_{total}$, with parameters $c_{total}$, $q_0$, $t_0$, $I$, and $s$.  
                     Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
                     ''')
+        st.write('')
         tab_e_total_sa()
 
     with tab_c:
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $c_{total}$, with parameters $\varepsilon_{total}$, $q_0$, $t_0$, $I$, and $s$.  
                     Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
                     ''')
+        st.write('')
         tab_c_total_sa()
 
     with tab_q:
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $q_0$, with parameters $\varepsilon_{total}$, $c_{total}$, $t_0$, $I$, and $s$.  
                     Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
                     ''')
+        st.write('')
         tab_q0_sa()
 
     with tab_t:
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $t_s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, $I$, and $s$.  
                     Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
                     ''')
+        st.write('')
         tab_ts_sa()
 
     with tab_i:
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $I$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
                     Parameter $I$ is for the irreversibility ratio.
                     ''')
+        st.write('')
         tab_i_sa()
 
     with tab_s:
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
                     Parameter $s$ is for the entropy production rate.
                     ''')
+        st.write('')
         tab_s_sa()
 
 
@@ -677,6 +738,12 @@ st.markdown('Here you can perform a sensitivity analysis.')
 
 if st.button("Analyze", type="primary"):
     with st.spinner("Calculating..."):
+        start = time.time()
         sensitivity_analysis()
+        stop = time.time()
 
-        st.toast('Sensitivity analysis done!', icon=':material/done_all:')
+        st.toast(f'''
+                 Sensitivity analysis done!  
+                 Run time: {stop - start:.2f} s
+                 ''', 
+                 icon=':material/done_all:')
