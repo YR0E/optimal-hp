@@ -64,7 +64,7 @@ def create_bounds_and_constraints(config, initial_total):
         x0 = [0.1] * 2
         bounds = [(0.05, 0.5)] * 2
         constraints = [{'type': 'ineq', 'fun': lambda x: initial_total - sum(x)}]  # sum(c_i) <= c_t
-    elif config[0] == 'sa':
+    elif config[0] == 'sa':   # can be removed later
         x0 = [0.5] * 4 + [0.2] * 2
         bounds = [(0, 1)] * 4 + [(0.05, 0.5)] * 2
         constraints = [
@@ -208,7 +208,7 @@ def find_minimum_vectorized(obj_func, opt_var, opt_config,
     Notes:
     The function uses the previous result as the initial guess for the next iteration.
     """
-    x1, x2 = guess_bound    # e_i (x0, xmin, xmax), c_i (...)
+    x1, x2 = guess_bound    # e*_i (x0, xmin, xmax), c*_i (...)
     results = []
 
     for i, var in enumerate(opt_var):

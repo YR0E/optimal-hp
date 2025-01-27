@@ -230,33 +230,89 @@ with tab_c_total:
 
 #=========PREP for SENSITIVITY ANALYSIS==========
 DEFAULT_SETTING_VALUES = {
-    'cut_off': True,
-    'warm_start': True,
+    'e_t_step': 0.1,
+    'e_t_slider': (2.0, 4.0),
     'opt_method': 'SLSQP',
     'tol': -16,
     'e_0': 0.5,
-    'c_0': 0.1,
     'bnds_e': (0.0, 1.0),
+    'c_0': 0.1,
     'bnds_c': (0.05, 0.5),
-    'e_t_step': 0.1,
-    'e_t_slider': (2.0, 4.0),
+    'warm_start': True,
+    'cut_off': True,
+    
+    'c_t_step': 0.025,
+    'c_t_slider': (0.4, 1.0),
+    'opt_method_c': 'SLSQP',
+    'tol_c': -16,
+    'e_0_c': 0.5,
+    'bnds_e_c': (0.0, 1.0),
+    'c_0_c': 0.1,
+    'bnds_c_c': (0.05, 0.5),
+    'warm_start_c': True,
+    'cut_off_c': True,
+
+    'q_step': 2.0,
+    'q_slider': (10.0, 80.0),
+    'opt_method_q': 'SLSQP',
+    'tol_q': -16,
+    'e_0_q': 0.5,
+    'bnds_e_q': (0.0, 1.0),
+    'c_0_q': 0.1,
+    'bnds_c_q': (0.05, 0.5),
+    'warm_start_q': True,
+    'cut_off_q': True,
+
+    't_step': 0.005,
+    't_slider': (0.85, 0.95),
+    'opt_method_t': 'SLSQP',
+    'tol_t': -16,
+    'e_0_t': 0.5,
+    'bnds_e_t': (0.0, 1.0),
+    'c_0_t': 0.1,
+    'bnds_c_t': (0.05, 0.5),
+    'warm_start_t': True,
+    'cut_off_t': True,
+
+    'I_step': 0.02,
+    'I_slider': (1.0, 2.0),
+    'opt_method_I': 'SLSQP',
+    'tol_I': -16,
+    'e_0_I': 0.5,
+    'bnds_e_I': (0.0, 1.0),
+    'c_0_I': 0.1,
+    'bnds_c_I': (0.05, 0.5),
+    'warm_start_I': True,
+    'cut_off_I': True,
+
+    's_step': 0.5,
+    's_slider': (0.0, 25.0),
+    'opt_method_s': 'SLSQP',
+    'tol_s': -16,
+    'e_0_s': 0.5,
+    'bnds_e_s': (0.0, 1.0),
+    'c_0_s': 0.1,
+    'bnds_c_s': (0.05, 0.5),
+    'warm_start_s': True,
+    'cut_off_s': True
+
 
 }
 DEFAULT_VALUES_SA_E = {
     'e_t_sae': (2.0, 4.0),
     'c_t_sae': 0.7,
-    'q0_sae': 10.0,
+    'q0_sae': 30.0,
     't_s_sae': 0.9,
     'I_sae': 1.1,
-    's_sae': 1.1
+    's_sae': 3.0
 }
 DEFAULT_VALUES_SA_C = {
     'e_t_sac': 2.0,
     'c_t_sac': (0.4, 1.0),
-    'q0_sac': 10.0,
+    'q0_sac': 30.0,
     't_s_sac': 0.9,
     'I_sac': 1.1,
-    's_sac': 1.1
+    's_sac': 3.0
 }
 DEFAULT_VALUES_SA_Q = {
     'e_t_saq': 2.0,
@@ -264,27 +320,27 @@ DEFAULT_VALUES_SA_Q = {
     'q0_saq': (10.0, 80.0),
     't_s_saq': 0.9,
     'I_saq': 1.1,
-    's_saq': 1.1
+    's_saq': 3.0
 }
 DEFAULT_VALUES_SA_T = {
     'e_t_sat': 2.0,
     'c_t_sat': 0.5,
-    'q0_sat': 10.0,
+    'q0_sat': 30.0,
     't_s_sat': (0.85, 0.95),
     'I_sat': 1.1,
-    's_sat': 1.1
+    's_sat': 3.0
 }
 DEFAULT_VALUES_SA_I = {
     'e_t_sai': 2.0,
     'c_t_sai': 0.5,
-    'q0_sai': 10.0,
+    'q0_sai': 30.0,
     't_s_sai': 0.9,
     'I_sai': (1.0, 2.0),
 }
 DEFAULT_VALUES_SA_S = {
     'e_t_sas': 2.0,
     'c_t_sas': 0.5,
-    'q0_sas': 10.0,
+    'q0_sas': 30.0,
     't_s_sas': 0.9,
     's_sas': (0.0, 25.0),
 }
@@ -320,8 +376,6 @@ def results_to_df(results, param, param_name, fix=True):
 def tab_e_total_sa():
     init_session_state(DEFAULT_VALUES_SA_E)
     init_session_state(DEFAULT_SETTING_VALUES)
-
-    
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     #========SLIDERS========
@@ -334,22 +388,25 @@ def tab_e_total_sa():
                       icon=":material/reset_settings:", help='Reset Settings to Defaults')
             
             left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
-            step_size = left.number_input("Variable step size:", value=0.10, min_value=0.01, max_value=0.20, step=0.01, key='e_t_step')
+            step_size = left.number_input("Variable step size:", min_value=0.01, max_value=0.20, step=0.01, key='e_t_step')
             var_range = right.slider("Variable range:", value=(2.0, 4.0), min_value=1.0, max_value=4.0, step=step_size, key='e_t_slider')
+            
             left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
             opt_method = left.selectbox("Opt. method:", ['COBYLA', 'SLSQP', 'trust-constr'], disabled=True, key='opt_method')
-            tolerance = right.slider("Tolerance, $10^{x}$:", value=-16, min_value=-24, max_value=-6, key='tol')
+            tolerance = right.slider("Tolerance, $10^{x}$:", min_value=-24, max_value=-6, key='tol')
             tolerance = 10**tolerance
+            
             left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
-            e_0 = left.number_input(r"Initial guess of $\varepsilon^*_{i}$:", value=0.5, min_value=0.0, max_value=1.0, step=0.1, key='e_0')
-            bnds_e = right.slider(r"Bounds on $\varepsilon^*_{i}$:", value=(0.0, 1.0), min_value=0.0, max_value=1.0, step=0.1, key='bnds_e')
+            e_0 = left.number_input(r"Initial guess of $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='e_0')
+            bnds_e = right.slider(r"Bounds on $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='bnds_e')
+            
             left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
-            c_0 = left.number_input(r"Initial guess of $c^*_{i}$:", value=0.1, min_value=0.0, max_value=1.0, step=0.1, key='c_0')
-            bnds_c = right.slider(r"Bounds on $c^*_{i}$:", value=(0.05, 0.5), min_value=0.0, max_value=1.0, step=0.01, key='bnds_c')
+            c_0 = left.number_input(r"Initial guess of $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='c_0')
+            bnds_c = right.slider(r"Bounds on $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.01, key='bnds_c')
             guess_bound = (e_0, *bnds_e), (c_0, *bnds_c)
             
-            warm_start = st.toggle("Vectorize with warm starting*", value=True, key='warm_start', help='Use previous results as initial guess for next iteration')
-            cuttoff_outliers = st.toggle("Outliers to `None`", value=True, key='cut_off')
+            warm_start = st.toggle("Vectorize with warm starting*", key='warm_start', help='Use previous results as initial guess for next iteration')
+            cuttoff_outliers = st.toggle("Outliers to `None`", key='cut_off')
 
 
         # init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sae', 1.0, 4.0, 0.1, fmt="%.1f")
@@ -418,9 +475,9 @@ def tab_e_total_sa():
     st.markdown(fr'''
                 #### Results
 
-                Initial guesses {txt}: $\quad \varepsilon^*_{{(i)0}} = $`{e_0:.2f}`; $\,\, c^*_{{(i)0}} = $`{c_0:.2f}`  
-                Bounds: $\quad \varepsilon^*_{{(i)}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
-                $\,\, c^*_{{(i)}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
+                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
+                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
+                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
     ''')
 
     col1, col2, col3 = st.columns((1, 1, 1))
@@ -437,11 +494,41 @@ def tab_e_total_sa():
 @st.fragment
 def tab_c_total_sa():
     init_session_state(DEFAULT_VALUES_SA_C)
+    init_session_state(DEFAULT_SETTING_VALUES)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     #========SLIDERS========
     with col_control:
-        init_c_t = init_slider('$c_{total}:$', 'c_t_sac', 0.2, 1.0, 0.02)
+        with st.popover('Settings', icon=":material/tune:", help='Set sensitivity analysis parameters'):
+            st.write('''Here you can set sensitivity analysis parameters for the optimization process.   
+                    The chosen parameter (variable) is $c_{total}$''')
+            
+            st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SETTING_VALUES), key='reset_set_c', 
+                      icon=":material/reset_settings:", help='Reset Settings to Defaults')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            step_size = left.number_input("Variable step size:", min_value=0.005, max_value=0.1, step=0.005, format="%.3f", key='c_t_step')
+            var_range = right.slider("Variable range:", value=(0.4, 1.0), min_value=0.2, max_value=1.0, step=step_size, key='c_t_slider')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            opt_method = left.selectbox("Opt. method:", ['COBYLA', 'SLSQP', 'trust-constr'], disabled=True, key='opt_method_c')
+            tolerance = right.slider("Tolerance, $10^{x}$:", value=-16, min_value=-24, max_value=-6, key='tol_c')
+            tolerance = 10**tolerance
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            e_0 = left.number_input(r"Initial guess of $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='e_0_c')
+            bnds_e = right.slider(r"Bounds on $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='bnds_e_c')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            c_0 = left.number_input(r"Initial guess of $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='c_0_c')
+            bnds_c = right.slider(r"Bounds on $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.01, key='bnds_c_c')
+            guess_bound = (e_0, *bnds_e), (c_0, *bnds_c)
+            
+            warm_start = st.toggle("Vectorize with warm starting*", key='warm_start_c', help='Use previous results as initial guess for next iteration')
+            cuttoff_outliers = st.toggle("Outliers to `None`", key='cut_off_c')
+
+
+        # init_c_t = init_slider('$c_{total}:$', 'c_t_sac', 0.2, 1.0, 0.02)
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sac', 0.4, 4.0, 0.01)
         init_q = init_slider('$q_{0}:$', 'q0_sac', 1.0, 100.0, 0.1, fmt="%.1f",
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
@@ -451,9 +538,10 @@ def tab_c_total_sa():
                              help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_C), key='btn_sac')
+        placeholder = st.empty()
 
-    step_size = 0.025
-    c_total = np.arange(init_c_t[0], init_c_t[1]+0.0001, step_size)
+    # step_size = 0.025
+    c_total = np.arange(var_range[0], var_range[1]+0.0001, step_size)
     initial_params = {
         'r': [init_eps_t, init_q, init_t_s, MULTIPLIER],
         'ir': [init_eps_t, init_q, init_t_s, init_I, MULTIPLIER],
@@ -466,15 +554,27 @@ def tab_c_total_sa():
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'c')
         results = {
-            'r': find_minimum_vectorized(objective_function, c_total, opt_config, *initial_params['r']),
-            'ir': find_minimum_vectorized(objective_function_ir_ratio, c_total, opt_config, *initial_params['ir']),
-            'ep': find_minimum_vectorized(objective_function_ep_rate, c_total, opt_config, *initial_params['ep']),
+            'r': find_minimum_vectorized(objective_function, c_total, opt_config, 
+                                         guess_bound, *initial_params['r'],
+                                         method=opt_method, tol=tolerance,
+                                         warm_start=warm_start),
+            'ir': find_minimum_vectorized(objective_function_ir_ratio, c_total, opt_config,
+                                          guess_bound, *initial_params['ir'],
+                                          method=opt_method, tol=tolerance,
+                                          warm_start=warm_start),
+            'ep': find_minimum_vectorized(objective_function_ep_rate, c_total, opt_config,
+                                          guess_bound, *initial_params['ep'],
+                                          method=opt_method, tol=tolerance,
+                                          warm_start=warm_start),
         }
-        df1, df2, df3 = results_to_df(results, c_total, 'c_t')
+        df1, df2, df3 = results_to_df(results, c_total, 'c_t', fix=cuttoff_outliers)
 
-    st.markdown(
+    txt = f'(warm starting*)' if warm_start else ''
+    placeholder.markdown(
                 f"""
-                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                <p style="font-size:13px; opacity:0.6;"> 
+                    Run time {txt}: {time.time() - start:.3f} s
+                </p>
                 """, 
                 unsafe_allow_html=True
     )
@@ -489,7 +589,15 @@ def tab_c_total_sa():
         )
 
 
-    st.write('#### Results')
+    st.write('')
+    st.markdown(fr'''
+                #### Results
+
+                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
+                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
+                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
+    ''')
+
     col1, col2, col3 = st.columns((1, 1, 1))
     with col1:
         st.write("Reversibility:")
@@ -504,12 +612,42 @@ def tab_c_total_sa():
 @st.fragment
 def tab_q0_sa():
     init_session_state(DEFAULT_VALUES_SA_Q)
+    init_session_state(DEFAULT_SETTING_VALUES)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     #========SLIDERS========
     with col_control:
-        init_q = init_slider('$q_{0}:$', 'q0_saq', 0.0, 100.0, 0.1, fmt="%.1f",
-                             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
+        with st.popover('Settings', icon=":material/tune:", help='Set sensitivity analysis parameters'):
+            st.write('''Here you can set sensitivity analysis parameters for the optimization process.   
+                    The chosen parameter (variable) is $q_{0}$''')
+            
+            st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SETTING_VALUES), key='reset_set_q', 
+                      icon=":material/reset_settings:", help='Reset Settings to Defaults')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            step_size = left.number_input("Variable step size:", min_value=0.05, max_value=5.0, step=0.05, key='q_step')
+            var_range = right.slider("Variable range:", value=(10.0, 80.0), min_value=0.0, max_value=100.0, step=step_size, key='q_slider')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            opt_method = left.selectbox("Opt. method:", ['COBYLA', 'SLSQP', 'trust-constr'], disabled=True, key='opt_method_q')
+            tolerance = right.slider("Tolerance, $10^{x}$:", min_value=-24, max_value=-6, key='tol_q')
+            tolerance = 10**tolerance
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            e_0 = left.number_input(r"Initial guess of $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='e_0_q')
+            bnds_e = right.slider(r"Bounds on $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='bnds_e_q')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            c_0 = left.number_input(r"Initial guess of $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='c_0_q')
+            bnds_c = right.slider(r"Bounds on $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.01, key='bnds_c_q')
+            guess_bound = (e_0, *bnds_e), (c_0, *bnds_c)
+            
+            warm_start = st.toggle("Vectorize with warm starting*", key='warm_start_q', help='Use previous results as initial guess for next iteration')
+            cuttoff_outliers = st.toggle("Outliers to `None`", key='cut_off_q')
+
+
+        # init_q = init_slider('$q_{0}:$', 'q0_saq', 0.0, 100.0, 0.1, fmt="%.1f",
+        #                      help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_saq', 0.4, 4.0, 0.01)
         init_c_t = init_slider('$c_{total}:$', 'c_t_saq', 0.1, 1.0, 0.01)
         init_t_s = init_slider('$t_{s}:$', 't_s_saq', 0.8, 1.0, 0.01)
@@ -518,9 +656,10 @@ def tab_q0_sa():
                              help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_Q), key='btn_saq')
+        placeholder = st.empty()
 
-    step_size = 2.0
-    q0 = np.arange(init_q[0], init_q[1]+0.0001, step_size)
+    # step_size = 2.0
+    q0 = np.arange(var_range[0], var_range[1]+0.0001, step_size)
     initial_params = {
         'r': [init_eps_t, init_c_t, init_t_s, MULTIPLIER],
         'ir': [init_eps_t, init_c_t, init_t_s, init_I, MULTIPLIER],
@@ -533,15 +672,27 @@ def tab_q0_sa():
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'q')
         results = {
-            'r': find_minimum_vectorized(objective_function, q0, opt_config, *initial_params['r']),
-            'ir': find_minimum_vectorized(objective_function_ir_ratio, q0, opt_config, *initial_params['ir']),
-            'ep': find_minimum_vectorized(objective_function_ep_rate, q0, opt_config, *initial_params['ep']),
+            'r': find_minimum_vectorized(objective_function, q0, opt_config,
+                                         guess_bound, *initial_params['r'],
+                                         method=opt_method, tol=tolerance,
+                                         warm_start=warm_start),
+            'ir': find_minimum_vectorized(objective_function_ir_ratio, q0, opt_config,
+                                          guess_bound, *initial_params['ir'],
+                                          method=opt_method, tol=tolerance,
+                                          warm_start=warm_start),
+            'ep': find_minimum_vectorized(objective_function_ep_rate, q0, opt_config,
+                                          guess_bound, *initial_params['ep'],
+                                          method=opt_method, tol=tolerance,
+                                          warm_start=warm_start),
         }
-        df1, df2, df3 = results_to_df(results, q0, 'q0')
+        df1, df2, df3 = results_to_df(results, q0, 'q0', fix=cuttoff_outliers)
 
-    st.markdown(
+    txt = f'(warm starting*)' if warm_start else ''
+    placeholder.markdown(
                 f"""
-                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                <p style="font-size:13px; opacity:0.6;"> 
+                    Run time {txt}: {time.time() - start:.3f} s
+                </p>
                 """, 
                 unsafe_allow_html=True
     )
@@ -556,7 +707,15 @@ def tab_q0_sa():
         )
 
 
-    st.write('#### Results')
+    st.write('')
+    st.markdown(fr'''
+                #### Results
+
+                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
+                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
+                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
+    ''')
+
     col1, col2, col3 = st.columns((1, 1, 1))
     with col1:
         st.write("Reversibility:")
@@ -571,11 +730,41 @@ def tab_q0_sa():
 @st.fragment
 def tab_ts_sa():
     init_session_state(DEFAULT_VALUES_SA_T)
+    init_session_state(DEFAULT_SETTING_VALUES)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     #========SLIDERS========
     with col_control:
-        init_t_s = init_slider('$t_{s}:$', 't_s_sat', 0.8, 1.0, 0.01)
+        with st.popover('Settings', icon=":material/tune:", help='Set sensitivity analysis parameters'):
+            st.write('''Here you can set sensitivity analysis parameters for the optimization process.   
+                    The chosen parameter (variable) is $t_{s}$''')
+            
+            st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SETTING_VALUES), key='reset_set_t', 
+                      icon=":material/reset_settings:", help='Reset Settings to Defaults')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            step_size = left.number_input("Variable step size:", min_value=0.001, max_value=0.02, step=0.001, format="%.3f", key='t_step')
+            var_range = right.slider("Variable range:", value=(0.85, 0.95), min_value=0.8, max_value=1.0, step=step_size, key='t_slider')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            opt_method = left.selectbox("Opt. method:", ['COBYLA', 'SLSQP', 'trust-constr'], disabled=True, key='opt_method_t')
+            tolerance = right.slider("Tolerance, $10^{x}$:", min_value=-24, max_value=-6, key='tol_t')
+            tolerance = 10**tolerance
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            e_0 = left.number_input(r"Initial guess of $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='e_0_t')
+            bnds_e = right.slider(r"Bounds on $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='bnds_e_t')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            c_0 = left.number_input(r"Initial guess of $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='c_0_t')
+            bnds_c = right.slider(r"Bounds on $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.01, key='bnds_c_t')
+            guess_bound = (e_0, *bnds_e), (c_0, *bnds_c)
+            
+            warm_start = st.toggle("Vectorize with warm starting*", key='warm_start_t', help='Use previous results as initial guess for next iteration')
+            cuttoff_outliers = st.toggle("Outliers to `None`", key='cut_off_t')
+
+
+        # init_t_s = init_slider('$t_{s}:$', 't_s_sat', 0.8, 1.0, 0.01)
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sat', 0.4, 4.0, 0.01)
         init_c_t = init_slider('$c_{total}:$', 'c_t_sat', 0.1, 1.0, 0.01)
         init_q = init_slider('$q_{0}:$', 'q0_sat', 1.0, 100.0, 0.1, fmt="%.1f",
@@ -585,9 +774,10 @@ def tab_ts_sa():
                              help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_T), key='btn_sat')
+        placeholder = st.empty()
 
-    step_size = 0.005
-    t_s = np.arange(init_t_s[0], init_t_s[1]+0.0001, step_size)
+    # step_size = 0.005
+    t_s = np.arange(var_range[0], var_range[1]+0.0001, step_size)
     initial_params = {
         'r': [init_eps_t, init_c_t, init_q, MULTIPLIER],
         'ir': [init_eps_t, init_c_t, init_q, init_I, MULTIPLIER],
@@ -600,15 +790,27 @@ def tab_ts_sa():
     with st.spinner("Calculating..."):
         opt_config = ('sa', 't')
         results = {
-            'r': find_minimum_vectorized(objective_function, t_s, opt_config, *initial_params['r']),
-            'ir': find_minimum_vectorized(objective_function_ir_ratio, t_s, opt_config, *initial_params['ir']),
-            'ep': find_minimum_vectorized(objective_function_ep_rate, t_s, opt_config, *initial_params['ep']),
+            'r': find_minimum_vectorized(objective_function, t_s, opt_config, 
+                                         guess_bound, *initial_params['r'],
+                                         method=opt_method, tol=tolerance,
+                                         warm_start=warm_start),
+            'ir': find_minimum_vectorized(objective_function_ir_ratio, t_s, opt_config,
+                                          guess_bound, *initial_params['ir'],
+                                          method=opt_method, tol=tolerance,
+                                          warm_start=warm_start),
+            'ep': find_minimum_vectorized(objective_function_ep_rate, t_s, opt_config,
+                                          guess_bound, *initial_params['ep'],
+                                          method=opt_method, tol=tolerance,
+                                          warm_start=warm_start),
         }
-        df1, df2, df3 = results_to_df(results, t_s, 't_s')
+        df1, df2, df3 = results_to_df(results, t_s, 't_s', fix=cuttoff_outliers)
 
-    st.markdown(
+    txt = f'(warm starting*)' if warm_start else ''
+    placeholder.markdown(
                 f"""
-                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                <p style="font-size:13px; opacity:0.6;"> 
+                    Run time {txt}: {time.time() - start:.3f} s
+                </p>
                 """, 
                 unsafe_allow_html=True
     )
@@ -623,7 +825,15 @@ def tab_ts_sa():
         )
 
 
-    st.write('#### Results')
+    st.write('')
+    st.markdown(fr'''
+                #### Results
+
+                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
+                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
+                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
+    ''')
+
     col1, col2, col3 = st.columns((1, 1, 1))
     with col1:
         st.write("Reversibility:")
@@ -638,11 +848,41 @@ def tab_ts_sa():
 @st.fragment
 def tab_i_sa():
     init_session_state(DEFAULT_VALUES_SA_I)
+    init_session_state(DEFAULT_SETTING_VALUES)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     #========SLIDERS========
     with col_control:
-        init_I = init_slider('$I:$', 'I_sai', 1.0, 3.0, 0.01)
+        with st.popover('Settings', icon=":material/tune:", help='Set sensitivity analysis parameters'):
+            st.write('''Here you can set sensitivity analysis parameters for the optimization process.   
+                    The chosen parameter (variable) is $I$''')
+            
+            st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SETTING_VALUES), key='reset_set_i', 
+                      icon=":material/reset_settings:", help='Reset Settings to Defaults')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            step_size = left.number_input("Variable step size:", min_value=0.005, max_value=0.1, step=0.005, format="%.3f", key='I_step')
+            var_range = right.slider("Variable range:", value=(1.0, 2.0), min_value=1.0, max_value=3.0, step=step_size, key='I_slider')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            opt_method = left.selectbox("Opt. method:", ['COBYLA', 'SLSQP', 'trust-constr'], disabled=True, key='opt_method_I')
+            tolerance = right.slider("Tolerance, $10^{x}$:", min_value=-24, max_value=-6, key='tol_I')
+            tolerance = 10**tolerance
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            e_0 = left.number_input(r"Initial guess of $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='e_0_I')
+            bnds_e = right.slider(r"Bounds on $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='bnds_e_I')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            c_0 = left.number_input(r"Initial guess of $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='c_0_I')
+            bnds_c = right.slider(r"Bounds on $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.01, key='bnds_c_I')
+            guess_bound = (e_0, *bnds_e), (c_0, *bnds_c)
+            
+            warm_start = st.toggle("Vectorize with warm starting*", key='warm_start_I', help='Use previous results as initial guess for next iteration')
+            cuttoff_outliers = st.toggle("Outliers to `None`", key='cut_off_I')
+
+
+        # init_I = init_slider('$I:$', 'I_sai', 1.0, 3.0, 0.01)
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sai', 0.4, 4.0, 0.01)
         init_c_t = init_slider('$c_{total}:$', 'c_t_sai', 0.1, 1.0, 0.01)
         init_q = init_slider('$q_{0}:$', 'q0_sai', 1.0, 100.0, 0.1, fmt="%.1f",
@@ -650,9 +890,10 @@ def tab_i_sa():
         init_t_s = init_slider('$t_{s}:$', 't_s_sai', 0.8, 1.0, 0.01)
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_I), key='btn_sai')
+        placeholder = st.empty()
 
-    step_size = 0.02
-    I = np.arange(init_I[0], init_I[1]+step_size, step_size)
+    # step_size = 0.02
+    I = np.arange(var_range[0], var_range[1]+step_size, step_size)
     initial_params = {
         'ir': [init_eps_t, init_c_t, init_q, init_t_s, MULTIPLIER],
     }
@@ -663,13 +904,19 @@ def tab_i_sa():
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'I')
         results = {
-            'ir': find_minimum_vectorized(objective_function_ir_ratio, I, opt_config, *initial_params['ir']),
+            'ir': find_minimum_vectorized(objective_function_ir_ratio, I, opt_config,
+                                          guess_bound, *initial_params['ir'],
+                                          method=opt_method, tol=tolerance,
+                                          warm_start=warm_start),
         }
-        df1,  = results_to_df(results, I, 'I')
+        df1,  = results_to_df(results, I, 'I', fix=cuttoff_outliers)
 
-    st.markdown(
+    txt = f'(warm starting*)' if warm_start else ''
+    placeholder.markdown(
                 f"""
-                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                <p style="font-size:13px; opacity:0.6;"> 
+                    Run time {txt}: {time.time() - start:.3f} s
+                </p>
                 """, 
                 unsafe_allow_html=True
     )
@@ -684,19 +931,57 @@ def tab_i_sa():
         )
 
 
-    st.write('#### Results')
+    st.write('')
+    st.markdown(fr'''
+                #### Results
+
+                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
+                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
+                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
+    ''')
+
     st.write("Irreversibility ratio:")
     st.dataframe(df1, height=210)
 
 @st.fragment
 def tab_s_sa():
     init_session_state(DEFAULT_VALUES_SA_S)
+    init_session_state(DEFAULT_SETTING_VALUES)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     #========SLIDERS========
     with col_control:
-        init_s = init_slider('$s:$', 's_sas', 0.0, 50.0, 0.5, fmt="%.1f",
-                             help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
+        with st.popover('Settings', icon=":material/tune:", help='Set sensitivity analysis parameters'):
+            st.write('''Here you can set sensitivity analysis parameters for the optimization process.   
+                    The chosen parameter (variable) is $s$''')
+            
+            st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SETTING_VALUES), key='reset_set_s', 
+                      icon=":material/reset_settings:", help='Reset Settings to Defaults')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            step_size = left.number_input("Variable step size:", min_value=0.05, max_value=2.0, step=0.05, key='s_step')
+            var_range = right.slider("Variable range:", value=(0.0, 25.0), min_value=0.0, max_value=50.0, step=step_size, key='s_slider')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            opt_method = left.selectbox("Opt. method:", ['COBYLA', 'SLSQP', 'trust-constr'], disabled=True, key='opt_method_s')
+            tolerance = right.slider("Tolerance, $10^{x}$:", min_value=-24, max_value=-6, key='tol_s')
+            tolerance = 10**tolerance
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            e_0 = left.number_input(r"Initial guess of $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='e_0_s')
+            bnds_e = right.slider(r"Bounds on $\varepsilon^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='bnds_e_s')
+            
+            left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
+            c_0 = left.number_input(r"Initial guess of $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.1, key='c_0_s')
+            bnds_c = right.slider(r"Bounds on $c^*_{i}$:", min_value=0.0, max_value=1.0, step=0.01, key='bnds_c_s')
+            guess_bound = (e_0, *bnds_e), (c_0, *bnds_c)
+            
+            warm_start = st.toggle("Vectorize with warm starting*", key='warm_start_s', help='Use previous results as initial guess for next iteration')
+            cuttoff_outliers = st.toggle("Outliers to `None`", key='cut_off_s')
+
+
+        # init_s = init_slider('$s:$', 's_sas', 0.0, 50.0, 0.5, fmt="%.1f",
+        #                      help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sas', 0.4, 4.0, 0.01)
         init_c_t = init_slider('$c_{total}:$', 'c_t_sas', 0.1, 1.0, 0.01)
         init_q = init_slider('$q_{0}:$', 'q0_sas', 1.0, 100.0, 0.1, fmt="%.1f",
@@ -704,9 +989,10 @@ def tab_s_sa():
         init_t_s = init_slider('$t_{s}:$', 't_s_sas', 0.8, 1.0, 0.01)
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_S), key='btn_sas')
+        placeholder = st.empty()
 
-    step_size = 0.5
-    s = np.arange(init_s[0], init_s[1]+0.0001, step_size)
+    # step_size = 0.5
+    s = np.arange(var_range[0], var_range[1]+0.0001, step_size)
     initial_params = {
         'ep': [init_eps_t, init_c_t, init_q, init_t_s, MULTIPLIER],
     }
@@ -717,13 +1003,19 @@ def tab_s_sa():
     with st.spinner("Calculating..."):
         opt_config = ('sa', 's')
         results = {
-            'ep': find_minimum_vectorized(objective_function_ep_rate, s, opt_config, *initial_params['ep']),
+            'ep': find_minimum_vectorized(objective_function_ep_rate, s, opt_config,
+                                          guess_bound, *initial_params['ep'],
+                                          method=opt_method, tol=tolerance,
+                                          warm_start=warm_start),
         }
-        df1,  = results_to_df(results, s, 's')
+        df1,  = results_to_df(results, s, 's', fix=cuttoff_outliers)
 
-    st.markdown(
+    txt = f'(warm starting*)' if warm_start else ''
+    placeholder.markdown(
                 f"""
-                <p style="font-size:13px; opacity:0.6;">Run time: {time.time() - start:.3f} s</p>
+                <p style="font-size:13px; opacity:0.6;"> 
+                    Run time {txt}: {time.time() - start:.3f} s
+                </p>
                 """, 
                 unsafe_allow_html=True
     )
@@ -738,7 +1030,15 @@ def tab_s_sa():
         )
 
 
-    st.write('#### Results')
+    st.write('')
+    st.markdown(fr'''
+                #### Results
+
+                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
+                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
+                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
+    ''')
+
     st.write("Entropy production rate:")
     st.dataframe(df1, height=210)
 
@@ -747,7 +1047,7 @@ def sensitivity_analysis():
     st.info(r'Choose a variable/parameter to analyze its impact on the minimum power consumption $min(w)$')
     tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$', 
                                                         '&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
-                                                        '&nbsp;&nbsp;&nbsp;&nbsp;$t_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
+                                                        '&nbsp;&nbsp;&nbsp;&nbsp;$t_s$&nbsp;&nbsp;&nbsp;&nbsp;', 
                                                         '&nbsp;&nbsp;&nbsp;&nbsp;$I$&nbsp;&nbsp;&nbsp;&nbsp;', 
                                                         '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'])
 
@@ -764,35 +1064,35 @@ def sensitivity_analysis():
                     Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
                     ''')
         st.write('')
-        # tab_c_total_sa()
+        tab_c_total_sa()
 
     with tab_q:
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $q_0$, with parameters $\varepsilon_{total}$, $c_{total}$, $t_0$, $I$, and $s$.  
                     Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
                     ''')
         st.write('')
-        # tab_q0_sa()
+        tab_q0_sa()
 
     with tab_t:
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $t_s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, $I$, and $s$.  
                     Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
                     ''')
         st.write('')
-        # tab_ts_sa()
+        tab_ts_sa()
 
     with tab_i:
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $I$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
                     Parameter $I$ is for the irreversibility ratio.
                     ''')
         st.write('')
-        # tab_i_sa()
+        tab_i_sa()
 
     with tab_s:
         st.markdown(r'''Minimum power consumption $\min(w)$ as a function of $s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
                     Parameter $s$ is for the entropy production rate.
                     ''')
         st.write('')
-        # tab_s_sa()
+        tab_s_sa()
 
 
 #==============SENSITIVITY ANALYSIS==============
