@@ -329,6 +329,10 @@ def tab_e_total_sa():
         with st.popover('Settings', icon=":material/tune:", help='Set sensitivity analysis parameters'):
             st.write(r'''Here you can set sensitivity analysis parameters for the optimization process.   
                     The chosen parameter (variable) is $\varepsilon_{total}$''')
+            
+            st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SETTING_VALUES), key='reset_set_e', 
+                      icon=":material/reset_settings:", help='Reset Settings to Defaults')
+            
             left, _, right = st.columns((1.7, 0.3, 3), vertical_alignment='top')
             step_size = left.number_input("Variable step size:", value=0.10, min_value=0.01, max_value=0.20, step=0.01, key='e_t_step')
             var_range = right.slider("Variable range:", value=(2.0, 4.0), min_value=1.0, max_value=4.0, step=step_size, key='e_t_slider')
@@ -346,8 +350,6 @@ def tab_e_total_sa():
             
             warm_start = st.toggle("Vectorize with warm starting", value=True, key='warm_start', help='Use previous results as initial guess for next iteration')
             cuttoff_outliers = st.toggle("Outliers to `None`", value=True, key='cut_off')
-            st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SETTING_VALUES), key='reset_set_e', 
-                      icon=":material/reset_settings:", help='Reset Settings to Defaults')
 
 
         # init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sae', 1.0, 4.0, 0.1, fmt="%.1f")
