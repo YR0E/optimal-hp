@@ -284,6 +284,7 @@ def plotting_sensitivity(data, labels, power, theme_session):
     fig.update_layout(
         title="Plot",
         autosize=True,
+        # height=450,
         margin=dict(l=10, r=10, b=10, t=40),
         xaxis=dict(
             title=x_title,
