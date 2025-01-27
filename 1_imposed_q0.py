@@ -348,7 +348,7 @@ def tab_e_total_sa():
             bnds_c = right.slider(r"Bounds on $c^*_{i}$:", value=(0.05, 0.5), min_value=0.0, max_value=1.0, step=0.01, key='bnds_c')
             guess_bound = (e_0, *bnds_e), (c_0, *bnds_c)
             
-            warm_start = st.toggle("Vectorize with warm starting", value=True, key='warm_start', help='Use previous results as initial guess for next iteration')
+            warm_start = st.toggle("Vectorize with warm starting*", value=True, key='warm_start', help='Use previous results as initial guess for next iteration')
             cuttoff_outliers = st.toggle("Outliers to `None`", value=True, key='cut_off')
 
 
@@ -394,7 +394,7 @@ def tab_e_total_sa():
         }
         df1, df2, df3 = results_to_df(results, e_total, 'ε_t', fix=cuttoff_outliers)
     
-    txt = f'(warm starting)' if warm_start else ''
+    txt = f'(warm starting*)' if warm_start else ''
     placeholder.markdown(
                 f"""
                 <p style="font-size:13px; opacity:0.6;"> 
@@ -418,7 +418,7 @@ def tab_e_total_sa():
     st.markdown(fr'''
                 #### Results
 
-                Initial guess {txt}: $\quad \varepsilon^*_{{(i)0}} = $`{e_0:.2f}`; $\,\, c^*_{{(i)0}} = $`{c_0:.2f}`  
+                Initial guesses {txt}: $\quad \varepsilon^*_{{(i)0}} = $`{e_0:.2f}`; $\,\, c^*_{{(i)0}} = $`{c_0:.2f}`  
                 Bounds: $\quad \varepsilon^*_{{(i)}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
                 $\,\, c^*_{{(i)}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
     ''')
