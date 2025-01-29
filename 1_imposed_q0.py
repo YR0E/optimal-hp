@@ -29,18 +29,18 @@ else:
 MULTIPLIER = 10**4
 POWER_OF_10 = np.log10(MULTIPLIER)
 DEFAULT_VALUES_EPS = {
-    'eps_total': 2.0,
-    'c_g': 0.2,
-    'c_p': 0.2,
-    'q0': 10.0,
-    't_s': 0.9,
-    'I': 1.01,
-    's': 0.1
+    'e_t_e': 2.0,
+    'c_g_e': 0.2,
+    'c_p_e': 0.2,
+    'q0_e': 10.0,
+    't_s_e': 0.9,
+    'I_e': 1.01,
+    's_e': 0.1
 }
 DEFAULT_VALUES_C = {
-    'e_g': 0.5,
-    'e_p': 0.5,
-    'c_total': 0.8,
+    'e_g_c': 0.5,
+    'e_p_c': 0.5,
+    'c_t_c': 0.8,
     'q0_c': 10.0,
     't_s_c': 0.9,
     'I_c': 1.01,
@@ -114,23 +114,18 @@ def tab_eps_total_plane():
 
     #=====SLIDERS=====
     with col_control:
-    # with col_control.form("sliders", border=False):
-        init_eps_total = init_slider(r'$\varepsilon_{total}:$', 'eps_total', 
+        init_eps_total = init_slider(r'$\varepsilon_{total}:$', 'e_t_e', 
                                      0.4, 4.0, 0.1, fmt="%.1f")
-        init_c_g = init_slider('$c_{g}:$', 'c_g', 0.05, 0.5, 0.01)
-        init_c_p = init_slider('$c_{p}:$', 'c_p', 0.05, 0.5, 0.01)
-        init_q = init_slider('$q_{0}:$', 'q0', 1.0, 50.0, 0.1, fmt="%.1f",
+        init_c_g = init_slider('$c_{g}:$', 'c_g_e', 0.05, 0.5, 0.01)
+        init_c_p = init_slider('$c_{p}:$', 'c_p_e', 0.05, 0.5, 0.01)
+        init_q = init_slider('$q_{0}:$', 'q0_e', 1.0, 50.0, 0.1, fmt="%.1f",
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
-        init_t_s = init_slider('$t_{s}:$', 't_s', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'I', 1.0, 3.0, 0.01)
-        init_s = init_slider('$s:$', 's', 0.1, 30.0, 0.01, 
+        init_t_s = init_slider('$t_{s}:$', 't_s_e', 0.8, 1.0, 0.01)
+        init_I = init_slider('$I:$', 'I_e', 1.0, 3.0, 0.01)
+        init_s = init_slider('$s:$', 's_e', 0.1, 30.0, 0.01, 
                              help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
 
-        # Submit and Reset Buttons
-        # col_btn1, col_btn2, _ = st.columns(3)
-        # submit = col_btn1.form_submit_button("Submit")
-        # reset = col_btn2.form_submit_button("Reset", on_click=reset_sliders)
-        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_EPS))
+        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_EPS), key='btn_e')
 
 
     # Perform optimization
@@ -172,9 +167,9 @@ def tab_c_total_plane():
 
     #=====SLIDERS=====
     with col_control:
-        init_c_total = init_slider('$c_{total}:$', 'c_total', 0.1, 1.0, 0.01)
-        init_e_g = init_slider(r'$\varepsilon_{g}:$', 'e_g', 0.1, 1.0, 0.01)
-        init_e_p = init_slider(r'$\varepsilon_{p}:$', 'e_p', 0.1, 1.0, 0.01)
+        init_c_total = init_slider('$c_{total}:$', 'c_t_c', 0.1, 1.0, 0.01)
+        init_e_g = init_slider(r'$\varepsilon_{g}:$', 'e_g_c', 0.1, 1.0, 0.01)
+        init_e_p = init_slider(r'$\varepsilon_{p}:$', 'e_p_c', 0.1, 1.0, 0.01)
         init_q = init_slider('$q_{0}:$', 'q0_c', 1.0, 50.0, 0.1, fmt="%.1f",
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
         init_t_s = init_slider('$t_{s}:$', 't_s_c', 0.8, 1.0, 0.01)
@@ -307,53 +302,60 @@ DEFAULT_SETTING_VALUES = {
         **DEFAULT_SETTING_GLOBAL
     }
 }
+DEFAULT_SA_SLIDERS = {
+    'e': {
+        'e_t': (2.0, 4.0),
+        'c_t': 0.7,
+        'q0': 30.0,
+        't_s': 0.9,
+        'I': 1.1,
+        's': 3.0
+    },
 
-DEFAULT_VALUES_SA_E = {
-    'e_t_sae': (2.0, 4.0),
-    'c_t_sae': 0.7,
-    'q0_sae': 30.0,
-    't_s_sae': 0.9,
-    'I_sae': 1.1,
-    's_sae': 3.0
+    'c': {
+        'e_t': 2.0,
+        'c_t': (0.4, 1.0),
+        'q0': 30.0,
+        't_s': 0.9,
+        'I': 1.1,
+        's': 3.0
+    },
+
+    'q': {
+        'e_t': 2.0,
+        'c_t': 0.5,
+        'q0': (10.0, 80.0),
+        't_s': 0.9,
+        'I': 1.1,
+        's': 3.0
+    },
+
+    't': {
+        'e_t': 2.0,
+        'c_t': 0.5,
+        'q0': 30.0,
+        't_s': (0.85, 0.95),
+        'I': 1.1,
+        's': 3.0
+    },
+    
+    'I': {
+        'e_t': 2.0,
+        'c_t': 0.5,
+        'q0': 30.0,
+        't_s': 0.9,
+        'I': (1.0, 2.0),
+    },
+
+    's': {
+        'e_t': 2.0,
+        'c_t': 0.5,
+        'q0': 30.0,
+        't_s': 0.9,
+        's': (0.0, 25.0)
+    }
 }
-DEFAULT_VALUES_SA_C = {
-    'e_t_sac': 2.0,
-    'c_t_sac': (0.4, 1.0),
-    'q0_sac': 30.0,
-    't_s_sac': 0.9,
-    'I_sac': 1.1,
-    's_sac': 3.0
-}
-DEFAULT_VALUES_SA_Q = {
-    'e_t_saq': 2.0,
-    'c_t_saq': 0.5,
-    'q0_saq': (10.0, 80.0),
-    't_s_saq': 0.9,
-    'I_saq': 1.1,
-    's_saq': 3.0
-}
-DEFAULT_VALUES_SA_T = {
-    'e_t_sat': 2.0,
-    'c_t_sat': 0.5,
-    'q0_sat': 30.0,
-    't_s_sat': (0.85, 0.95),
-    'I_sat': 1.1,
-    's_sat': 3.0
-}
-DEFAULT_VALUES_SA_I = {
-    'e_t_sai': 2.0,
-    'c_t_sai': 0.5,
-    'q0_sai': 30.0,
-    't_s_sai': 0.9,
-    'I_sai': (1.0, 2.0),
-}
-DEFAULT_VALUES_SA_S = {
-    'e_t_sas': 2.0,
-    'c_t_sas': 0.5,
-    'q0_sas': 30.0,
-    't_s_sas': 0.9,
-    's_sas': (0.0, 25.0),
-}
+
 def results_to_df(results, param, param_name, fix=True):
     """
     Converts optimization results into a list of DataFrames.
@@ -486,7 +488,6 @@ def settings_popover(var, defaults):
 
 @st.fragment
 def tab_e_total_sa():
-    init_session_state(DEFAULT_VALUES_SA_E)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     with col_control:
@@ -496,15 +497,15 @@ def tab_e_total_sa():
         txt = f'(warm starting*)' if warm_start else ''
 
         # sliders
-        init_c_t = init_slider('$c_{total}:$', 'c_t_sae', 0.1, 1.0, 0.01)
-        init_q = init_slider('$q_{0}:$', 'q0_sae', 1.0, 100.0, 0.1, fmt="%.1f",
+        init_c_t = init_slider('$c_{total}:$', 'e_c_t', 0.1, 1.0, 0.01)
+        init_q = init_slider('$q_{0}:$', 'e_q0', 1.0, 100.0, 0.1, fmt="%.1f",
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
-        init_t_s = init_slider('$t_{s}:$', 't_s_sae', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'I_sae', 1.0, 3.0, 0.01)
-        init_s = init_slider('$s:$', 's_sae', 0.1, 20.0, 0.01,
+        init_t_s = init_slider('$t_{s}:$', 'e_t_s', 0.8, 1.0, 0.01)
+        init_I = init_slider('$I:$', 'e_I', 1.0, 3.0, 0.01)
+        init_s = init_slider('$s:$', 'e_s', 0.1, 20.0, 0.01,
                              help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
 
-        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_E), 
+        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
                   key='btn_sae', help='Reset Parameters to Defaults')
         runtime_info = st.empty()
 
@@ -558,7 +559,6 @@ def tab_e_total_sa():
 
 @st.fragment
 def tab_c_total_sa():
-    init_session_state(DEFAULT_VALUES_SA_C)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     with col_control:
@@ -568,15 +568,15 @@ def tab_c_total_sa():
         txt = f'(warm starting*)' if warm_start else ''
 
         # sliders
-        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sac', 0.4, 4.0, 0.01)
-        init_q = init_slider('$q_{0}:$', 'q0_sac', 1.0, 100.0, 0.1, fmt="%.1f",
+        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'c_e_t', 0.4, 4.0, 0.01)
+        init_q = init_slider('$q_{0}:$', 'c_q0', 1.0, 100.0, 0.1, fmt="%.1f",
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
-        init_t_s = init_slider('$t_{s}:$', 't_s_sac', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'I_sac', 1.0, 3.0, 0.01)
-        init_s = init_slider('$s:$', 's_sac', 0.1, 30.0, 0.01,
+        init_t_s = init_slider('$t_{s}:$', 'c_t_s', 0.8, 1.0, 0.01)
+        init_I = init_slider('$I:$', 'c_I', 1.0, 3.0, 0.01)
+        init_s = init_slider('$s:$', 'c_s', 0.1, 30.0, 0.01,
                              help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
 
-        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_C), 
+        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
                   key='btn_sac', help='Reset Parameters to Defaults')
         runtime_info = st.empty()
 
@@ -630,7 +630,6 @@ def tab_c_total_sa():
 
 @st.fragment
 def tab_q0_sa():
-    init_session_state(DEFAULT_VALUES_SA_Q)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     with col_control:
@@ -640,14 +639,14 @@ def tab_q0_sa():
         txt = f'(warm starting*)' if warm_start else ''
 
         # sliders
-        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_saq', 0.4, 4.0, 0.01)
-        init_c_t = init_slider('$c_{total}:$', 'c_t_saq', 0.1, 1.0, 0.01)
-        init_t_s = init_slider('$t_{s}:$', 't_s_saq', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'I_saq', 1.0, 3.0, 0.01)
-        init_s = init_slider('$s:$', 's_saq', 0.1, 30.0, 0.01,
+        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'q_e_t', 0.4, 4.0, 0.01)
+        init_c_t = init_slider('$c_{total}:$', 'q_c_t', 0.1, 1.0, 0.01)
+        init_t_s = init_slider('$t_{s}:$', 'q_t_s', 0.8, 1.0, 0.01)
+        init_I = init_slider('$I:$', 'q_I', 1.0, 3.0, 0.01)
+        init_s = init_slider('$s:$', 'q_s', 0.1, 30.0, 0.01,
                              help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
 
-        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_Q), 
+        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
                   key='btn_saq', help='Reset Parameters to Defaults')
         runtime_info = st.empty()
 
@@ -701,7 +700,6 @@ def tab_q0_sa():
 
 @st.fragment
 def tab_ts_sa():
-    init_session_state(DEFAULT_VALUES_SA_T)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     with col_control:
@@ -711,15 +709,15 @@ def tab_ts_sa():
         txt = f'(warm starting*)' if warm_start else ''
 
         # sliders
-        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sat', 0.4, 4.0, 0.01)
-        init_c_t = init_slider('$c_{total}:$', 'c_t_sat', 0.1, 1.0, 0.01)
-        init_q = init_slider('$q_{0}:$', 'q0_sat', 1.0, 100.0, 0.1, fmt="%.1f",
+        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 't_e_t', 0.4, 4.0, 0.01)
+        init_c_t = init_slider('$c_{total}:$', 't_c_t', 0.1, 1.0, 0.01)
+        init_q = init_slider('$q_{0}:$', 't_q0', 1.0, 100.0, 0.1, fmt="%.1f",
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
-        init_I = init_slider('$I:$', 'I_sat', 1.0, 3.0, 0.01)
-        init_s = init_slider('$s:$', 's_sat', 0.1, 30.0, 0.01,
+        init_I = init_slider('$I:$', 't_I', 1.0, 3.0, 0.01)
+        init_s = init_slider('$s:$', 't_s', 0.1, 30.0, 0.01,
                              help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
 
-        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_T), 
+        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
                   key='btn_sat', help='Reset Parameters to Defaults')
         runtime_info = st.empty()
 
@@ -774,7 +772,6 @@ def tab_ts_sa():
 
 @st.fragment
 def tab_i_sa():
-    init_session_state(DEFAULT_VALUES_SA_I)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     with col_control:
@@ -784,13 +781,13 @@ def tab_i_sa():
         txt = f'(warm starting*)' if warm_start else ''
 
         # sliders
-        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sai', 0.4, 4.0, 0.01)
-        init_c_t = init_slider('$c_{total}:$', 'c_t_sai', 0.1, 1.0, 0.01)
-        init_q = init_slider('$q_{0}:$', 'q0_sai', 1.0, 100.0, 0.1, fmt="%.1f",
+        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'I_e_t', 0.4, 4.0, 0.01)
+        init_c_t = init_slider('$c_{total}:$', 'I_c_t', 0.1, 1.0, 0.01)
+        init_q = init_slider('$q_{0}:$', 'I_q0', 1.0, 100.0, 0.1, fmt="%.1f",
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
-        init_t_s = init_slider('$t_{s}:$', 't_s_sai', 0.8, 1.0, 0.01)
+        init_t_s = init_slider('$t_{s}:$', 'I_t_s', 0.8, 1.0, 0.01)
 
-        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_I), 
+        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
                   key='btn_sai', help='Reset Parameters to Defaults')
         runtime_info = st.empty()
 
@@ -834,7 +831,6 @@ def tab_i_sa():
 
 @st.fragment
 def tab_s_sa():
-    init_session_state(DEFAULT_VALUES_SA_S)
     col_control, _, col_plot = st.columns((0.28, 0.02, 0.70))
     
     with col_control:
@@ -844,13 +840,13 @@ def tab_s_sa():
         txt = f'(warm starting*)' if warm_start else ''
 
         # sliders
-        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'e_t_sas', 0.4, 4.0, 0.01)
-        init_c_t = init_slider('$c_{total}:$', 'c_t_sas', 0.1, 1.0, 0.01)
-        init_q = init_slider('$q_{0}:$', 'q0_sas', 1.0, 100.0, 0.1, fmt="%.1f",
+        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 's_e_t', 0.4, 4.0, 0.01)
+        init_c_t = init_slider('$c_{total}:$', 's_c_t', 0.1, 1.0, 0.01)
+        init_q = init_slider('$q_{0}:$', 's_q0', 1.0, 100.0, 0.1, fmt="%.1f",
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
-        init_t_s = init_slider('$t_{s}:$', 't_s_sas', 0.8, 1.0, 0.01)
+        init_t_s = init_slider('$t_{s}:$', 's_t_s', 0.8, 1.0, 0.01)
 
-        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_SA_S), 
+        st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
                   key='btn_sas', help='Reset Parameters to Defaults')
         runtime_info = st.empty()
 
@@ -895,6 +891,7 @@ def tab_s_sa():
 @st.fragment
 def sensitivity_analysis():
     init_session_state(DEFAULT_SETTING_VALUES)
+    init_session_state(DEFAULT_SA_SLIDERS)
 
     st.info(r'Choose a variable/parameter to analyze its impact on the minimum power consumption $min(w)$')
     tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs([r'$\varepsilon_{total}$', '$c_{total}$', 
