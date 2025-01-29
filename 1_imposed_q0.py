@@ -361,16 +361,59 @@ def results_to_df(results, param, param_name, fix=True):
     
     for key, result_list in results.items():
         df = pd.DataFrame.from_records(
-            [(e, r.fun * MULTIPLIER, *r.x) for e, r in zip(param, result_list)],
+            [(p, r.fun * MULTIPLIER, *r.x) for p, r in zip(param, result_list)],
             columns=columns
         ).set_index(param_name)
         
         # Set values out of range (<0 or >9999) to None (to handle optimization errors)
         if fix:
             df[(df < 0) | (df > 9999)] = None
+            
         dataframes.append(df)
     
     return dataframes
+
+def display_results(dfs, x0_bounds, info=''):
+    """
+    Displays optimization results in Streamlit columns.
+
+    Parameters:
+        dfs (list): List of DataFrames containing optimization results.
+        x0_bounds (tuple): Tuple of tuples containing initial guesses and bounds for the parameters.
+        info (str, optional): Additional information to display in the Streamlit Markdown. Defaults to ''.
+    """
+
+    height = 210
+    e_0, e_min, e_max = x0_bounds[0]
+    c_0, c_min, c_max = x0_bounds[1]
+
+    st.write('')
+    st.markdown(fr'''
+                #### Results
+
+                Initial guesses {info}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
+                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{e_min}, {e_max}`$]$;
+                $\,\, c^*_{{i}} \in [$`{c_min}, {c_max}`$]$  
+    ''')
+
+    if len(dfs) == 3:
+        df1, df2, df3 = dfs
+        col1, col2, col3 = st.columns((1, 1, 1))
+        with col1:
+            st.write("Reversibility:")
+            st.dataframe(df1, height=height)
+        with col2:
+            st.write("Irreversibility ratio:")
+            st.dataframe(df2, height=height)
+        with col3:
+            st.write("Entropy production rate:")
+            st.dataframe(df3, height=height)
+    else:
+        df = dfs[0]
+        text = 'Irreversibility ratio' if df.index.name == 'I' else 'Entropy production rate'
+        st.write(f"{text}:")
+        st.dataframe(df, height=height) 
+
 
 @st.fragment
 def tab_e_total_sa():
@@ -470,26 +513,7 @@ def tab_e_total_sa():
             theme_session
         )
 
-
-    st.write('')
-    st.markdown(fr'''
-                #### Results
-
-                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
-                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
-                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
-    ''')
-
-    col1, col2, col3 = st.columns((1, 1, 1))
-    with col1:
-        st.write("Reversibility:")
-        st.dataframe(df1, height=210)
-    with col2:
-        st.write("Irreversibility ratio:")
-        st.dataframe(df2, height=210)
-    with col3:
-        st.write("Entropy production rate:")
-        st.dataframe(df3, height=210)
+    display_results([df1, df2, df3], guess_bound, info=txt)
 
 @st.fragment
 def tab_c_total_sa():
@@ -588,26 +612,7 @@ def tab_c_total_sa():
             theme_session
         )
 
-
-    st.write('')
-    st.markdown(fr'''
-                #### Results
-
-                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
-                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
-                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
-    ''')
-
-    col1, col2, col3 = st.columns((1, 1, 1))
-    with col1:
-        st.write("Reversibility:")
-        st.dataframe(df1, height=210)
-    with col2:
-        st.write("Irreversibility ratio:")
-        st.dataframe(df2, height=210)
-    with col3:
-        st.write("Entropy production rate:")
-        st.dataframe(df3, height=210)
+    display_results([df1, df2, df3], guess_bound, info=txt)
 
 @st.fragment
 def tab_q0_sa():
@@ -706,26 +711,7 @@ def tab_q0_sa():
             theme_session
         )
 
-
-    st.write('')
-    st.markdown(fr'''
-                #### Results
-
-                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
-                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
-                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
-    ''')
-
-    col1, col2, col3 = st.columns((1, 1, 1))
-    with col1:
-        st.write("Reversibility:")
-        st.dataframe(df1, height=210)
-    with col2:
-        st.write("Irreversibility ratio:")
-        st.dataframe(df2, height=210)
-    with col3:
-        st.write("Entropy production rate:")
-        st.dataframe(df3, height=210)
+    display_results([df1, df2, df3], guess_bound, info=txt)
 
 @st.fragment
 def tab_ts_sa():
@@ -824,26 +810,7 @@ def tab_ts_sa():
             theme_session
         )
 
-
-    st.write('')
-    st.markdown(fr'''
-                #### Results
-
-                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
-                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
-                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
-    ''')
-
-    col1, col2, col3 = st.columns((1, 1, 1))
-    with col1:
-        st.write("Reversibility:")
-        st.dataframe(df1, height=210)
-    with col2:
-        st.write("Irreversibility ratio:")
-        st.dataframe(df2, height=210)
-    with col3:
-        st.write("Entropy production rate:")
-        st.dataframe(df3, height=210)
+    display_results([df1, df2, df3], guess_bound, info=txt)
 
 @st.fragment
 def tab_i_sa():
@@ -930,18 +897,7 @@ def tab_i_sa():
             theme_session
         )
 
-
-    st.write('')
-    st.markdown(fr'''
-                #### Results
-
-                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
-                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
-                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
-    ''')
-
-    st.write("Irreversibility ratio:")
-    st.dataframe(df1, height=210)
+    display_results([df1], guess_bound, info=txt)
 
 @st.fragment
 def tab_s_sa():
@@ -1029,18 +985,7 @@ def tab_s_sa():
             theme_session
         )
 
-
-    st.write('')
-    st.markdown(fr'''
-                #### Results
-
-                Initial guesses {txt}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
-                Bounds: $\quad \varepsilon^*_{{i}} \in [$`{bnds_e[0]}, {bnds_e[1]}`$]$;
-                $\,\, c^*_{{i}} \in [$`{bnds_c[0]}, {bnds_c[1]}`$]$  
-    ''')
-
-    st.write("Entropy production rate:")
-    st.dataframe(df1, height=210)
+    display_results([df1], guess_bound, info=txt)
 
 @st.fragment
 def sensitivity_analysis():

@@ -37,6 +37,7 @@ def parse_config(x, initial_params, config):
         e_t, _, q0, t_s, *others = initial_params
     else:
         raise ValueError(f"Unsupported config: {config}")
+    
     return e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others
 
 
@@ -73,6 +74,7 @@ def create_bounds_and_constraints(config, initial_total):
         ]
     else:
         raise ValueError(f"Unsupported config: {config}")
+    
     return x0, bounds, constraints
 
 
