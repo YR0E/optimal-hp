@@ -37,6 +37,7 @@ def parse_config(x, initial_params, config):
         e_t, _, q0, t_s, *others = initial_params
     else:
         raise ValueError(f"Unsupported config: {config}")
+    
     return e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others
 
 
@@ -64,15 +65,16 @@ def create_bounds_and_constraints(config, initial_total):
         x0 = [0.1] * 2
         bounds = [(0.05, 0.5)] * 2
         constraints = [{'type': 'ineq', 'fun': lambda x: initial_total - sum(x)}]  # sum(c_i) <= c_t
-    elif config[0] == 'sa':
+    elif config[0] == 'sa':   # can be removed later
         x0 = [0.5] * 4 + [0.2] * 2
-        bounds = [(0, 1)] * 4 + [(0, 1)] * 2
+        bounds = [(0, 1)] * 4 + [(0.05, 0.5)] * 2
         constraints = [
             {'type': 'ineq', 'fun': lambda x: initial_total[0] - sum(x[:4])},  # sum(e_i) <= e_t
             {'type': 'ineq', 'fun': lambda x: initial_total[1] - sum(x[4:])},  # sum(c_i) <= c_t
         ]
     else:
         raise ValueError(f"Unsupported config: {config}")
+    
     return x0, bounds, constraints
 
 
@@ -189,7 +191,10 @@ def find_minimum(obj_func, initial_params, config):
     return result
 
 
-def find_minimum_vectorized(obj_func, opt_var, opt_config, *params):
+def find_minimum_vectorized(obj_func, opt_var, opt_config, 
+                            guess_bound, *params, 
+                            method='SLSQP', tol=1e-16,
+                            warm_start=True):
     """
     Finds the minimum of the objective function for a vector of variables.
 
@@ -205,7 +210,7 @@ def find_minimum_vectorized(obj_func, opt_var, opt_config, *params):
     Notes:
     The function uses the previous result as the initial guess for the next iteration.
     """
-
+    x1, x2 = guess_bound    # e*_i (x0, xmin, xmax), c*_i (...)
     results = []
 
     for i, var in enumerate(opt_var):
@@ -221,11 +226,19 @@ def find_minimum_vectorized(obj_func, opt_var, opt_config, *params):
             initial_params = (*params[:4], var, params[-1])
 
         # Use the previous result as the initial guess
-        if (i > 0 and results[i-1].success):
-            x0 = results[i-1].x  # Update initial guess with the previous result
-            _, bounds, constraints = create_bounds_and_constraints(opt_config, initial_params)
+        if (i > 0 and results[i-1].success) and warm_start:
+            x0 = results[i-1].x         # Update initial guess with the previous result
+            # _, bounds, constraints = create_bounds_and_constraints(opt_config, initial_params)
         else:
-            x0, bounds, constraints = create_bounds_and_constraints(opt_config, initial_params)
+            # x0, bounds, constraints = create_bounds_and_constraints(opt_config, initial_params)
+            x0 = [x1[0]] * 4 + [x2[0]] * 2
+        
+        bounds = [(x1[1], x1[2])] * 4 + [(x2[1], x2[2])] * 2
+        constraints = [
+            {'type': 'ineq', 'fun': lambda x: initial_params[0] - sum(x[:4])},  # sum(e_i) <= e_t
+            {'type': 'ineq', 'fun': lambda x: initial_params[1] - sum(x[4:])},  # sum(c_i) <= c_t
+        ]
+        
 
         # Perform minimization
         result = minimize(
@@ -234,7 +247,8 @@ def find_minimum_vectorized(obj_func, opt_var, opt_config, *params):
             args=(initial_params, opt_config),
             bounds=bounds,
             constraints=constraints,
-            tol=1e-16,
+            method=method,
+            tol=tol,
         )
 
         results.append(result)  # Store the minimized function value
