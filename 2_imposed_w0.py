@@ -10,7 +10,7 @@ if theme is not None and theme['base']=='dark':
     dark_mode = True
 
 _, col_img, _ = st.columns([1, 6, 1])
-image_path = "img/gshp-dark.png" if dark_mode else "img/gshp.png"
+image_path = "img/gshp-dark.svg" if dark_mode else "img/gshp.svg"
 col_img.image(image_path, caption="Ground source heat pump")
 
 st.markdown("## $w_0$: Maximum heat extraction")
