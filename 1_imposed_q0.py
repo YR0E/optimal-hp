@@ -215,7 +215,7 @@ def tab_c_total_plane():
 
 #============MAIN CALCULATION==============
 _, col_img, _ = st.columns([1, 6, 1])
-image_path = "img/gshp-dark.png" if dark_mode else "img/gshp.png"
+image_path = "img/gshp-dark.svg" if dark_mode else "img/gshp.svg"
 
 col_img.image(image_path, caption="Ground source heat pump")
 st.markdown("## Minimum power consumption")
