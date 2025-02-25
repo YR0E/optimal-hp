@@ -59,15 +59,15 @@ def create_bounds_and_constraints(config, initial_total):
     
     if config == 'e':
         x0 = [0.5] * 4
-        bounds = [(0.1, 1)] * 4
+        bounds = [(0, 1)] * 4
         constraints = [{'type': 'ineq', 'fun': lambda x: initial_total - sum(x)}]  # sum(e_i) <= e_t
     elif config == 'c':
-        x0 = [0.1] * 2
-        bounds = [(0.05, 0.5)] * 2
+        x0 = [0.2] * 2
+        bounds = [(0, 1)] * 2
         constraints = [{'type': 'ineq', 'fun': lambda x: initial_total - sum(x)}]  # sum(c_i) <= c_t
     elif config[0] == 'sa':   # can be removed later
         x0 = [0.5] * 4 + [0.2] * 2
-        bounds = [(0, 1)] * 4 + [(0.05, 0.5)] * 2
+        bounds = [(0, 1)] * 6
         constraints = [
             {'type': 'ineq', 'fun': lambda x: initial_total[0] - sum(x[:4])},  # sum(e_i) <= e_t
             {'type': 'ineq', 'fun': lambda x: initial_total[1] - sum(x[4:])},  # sum(c_i) <= c_t

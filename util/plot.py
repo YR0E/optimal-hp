@@ -40,7 +40,7 @@ def plotting3D(res, initial_params, opt_var):
         'c': {
             'init_value': initial_params['r'][2],   # c_total
             'var_name': 'c',
-            'values_range': [0.05, 0.5],
+            'values_range': [0.05, 1],
             'step_size': 0.01,
         }
     }

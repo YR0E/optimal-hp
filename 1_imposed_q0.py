@@ -243,7 +243,7 @@ DEFAULT_SETTING_GLOBAL = {
     'e_0': 0.5,
     'e_bnds': (0.0, 1.0),
     'c_0': 0.1,
-    'c_bnds': (0.05, 0.5),
+    'c_bnds': (0.0, 1.0),
     'warm_start': True,
     'cut_off': True
 }
@@ -453,9 +453,9 @@ def settings_popover(var, defaults):
                                         min_value=step_min, max_value=step_max, 
                                         step=step, format="%.3f", key=f'{var}_step')
         range_min, range_max = defaults[var]['range_widget']
-        var_range = right.slider("Variable range:", value=defaults[var]['range'], 
-                                    min_value=range_min, max_value=range_max, 
-                                    step=step_size, key=f'{var}_range')
+        var_range = right.slider("Variable range:", 
+                                 min_value=range_min, max_value=range_max, 
+                                 step=step_size, key=f'{var}_range')
         
         left, _, right = st.columns(columns_size, vertical_alignment='top')
         opt_method = left.selectbox("Opt. method:", methods_list, disabled=True, key=f'{var}_opt_method')
