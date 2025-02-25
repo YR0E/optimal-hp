@@ -1,3 +1,5 @@
 .streamlit/secrets.toml
+paper_plot/
+99_plots_q0.ipynb
 _extra/
 __pycache__/
