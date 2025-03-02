@@ -35,7 +35,7 @@ DEFAULT_VALUES_EPS = {
     'q0_e': 10.0,
     't_s_e': 0.9,
     'I_e': 1.01,
-    's_e': 0.1
+    # 's_e': 0.1
 }
 DEFAULT_VALUES_C = {
     'e_g_c': 0.5,
@@ -44,7 +44,7 @@ DEFAULT_VALUES_C = {
     'q0_c': 10.0,
     't_s_c': 0.9,
     'I_c': 1.01,
-    's_c': 0.1
+    # 's_c': 0.1
 }
 
 def init_session_state(default):
@@ -84,7 +84,7 @@ def reset_sliders(default):
                 
     recursive_update(None, default)
 
-def init_slider(varname, key, minval, maxval, step, fmt="%.2f", help=None):
+def init_slider(varname, key, minval, maxval, step, fmt="%.2f", value=None, help=None):
     """
     Initializes a slider.
 
@@ -103,8 +103,11 @@ def init_slider(varname, key, minval, maxval, step, fmt="%.2f", help=None):
 
     col1, col2 = st.columns((0.15, 0.85))
     col1.markdown(varname, help=help)
-    slider_val = col2.slider(label=key, label_visibility="collapsed", key=key,
-                           min_value=minval, max_value=maxval, step=step, format=fmt)
+    slider_val = col2.slider(
+        label=key, label_visibility="collapsed", key=key,
+        min_value=minval, max_value=maxval, value=value,
+        step=step, format=fmt)
+    
     return slider_val
 
 @st.fragment
@@ -122,8 +125,12 @@ def tab_eps_total_plane():
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
         init_t_s = init_slider('$t_{s}:$', 't_s_e', 0.8, 1.0, 0.01)
         init_I = init_slider('$I:$', 'I_e', 1.0, 3.0, 0.01)
-        init_s = init_slider('$s:$', 's_e', 0.1, 30.0, 0.01, 
-                             help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
+        
+        s_value = ((init_I-1)*init_q/MULTIPLIER)/(init_t_s - (2*init_q/(MULTIPLIER*(init_c_g+init_c_p)))*(8/init_eps_total - 1))*MULTIPLIER
+        init_s = init_slider(
+            '$s:$', 's_e', 0.1, 50.0, 0.01, value=s_value,
+            help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}},\quad s=f(I, q_{{0}}, t_s, \varepsilon, c) $'
+        )
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_EPS), key='btn_e')
 
@@ -174,8 +181,12 @@ def tab_c_total_plane():
                              help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$')
         init_t_s = init_slider('$t_{s}:$', 't_s_c', 0.8, 1.0, 0.01)
         init_I = init_slider('$I:$', 'I_c', 1.0, 3.0, 0.01)
-        init_s = init_slider('$s:$', 's_c', 0.1, 30.0, 0.01, 
-                             help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$')
+        
+        s_value = ((init_I-1)*init_q/MULTIPLIER)/(init_t_s - (2*init_q/(MULTIPLIER*init_c_total))*(8/(init_e_g+init_e_p) - 1))*MULTIPLIER
+        init_s = init_slider(
+            '$s:$', 's_c', 0.1, 50.0, 0.01, value=s_value,
+            help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}},\quad s=f(I, q_{{0}}, t_s, \varepsilon, c) $'
+        )
 
         st.button("Reset", on_click=lambda: reset_sliders(DEFAULT_VALUES_C), key='btn_c')
 
