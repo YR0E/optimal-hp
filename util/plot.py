@@ -179,12 +179,20 @@ def plotting3D(res, initial_params, opt_var):
         height=510,
         margin=dict(l=10, r=10, b=10, t=40),
         scene=dict(
-            xaxis_title=f'<i>{var_name}<sub>g</sub></i>',
-            yaxis_title=f'<i>{var_name}<sub>p</sub></i>',
-            zaxis_title=f'<i>w</i> · 10<sup>−{POWER_OF_10:.0f}</sup>',
-            xaxis_title_font=DEFAULT_FONT,
-            yaxis_title_font=DEFAULT_FONT,
-            zaxis_title_font=DEFAULT_FONT,
+            xaxis=dict(
+                title=f'<i>{var_name}<sub>g</sub></i>',
+                title_font=DEFAULT_FONT,
+                range=[0, 1],
+            ),
+            yaxis=dict(
+                title=f'<i>{var_name}<sub>p</sub></i>',
+                title_font=DEFAULT_FONT,
+                range=[0, 1],
+            ),
+            zaxis=dict(
+                title=f'<i>w</i> · 10<sup>−{POWER_OF_10:.0f}</sup>',
+                title_font=DEFAULT_FONT,
+            ),
             # aspectratio=dict(x=1, y=1, z=1),
             aspectmode='cube',
             camera=dict(
