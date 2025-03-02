@@ -127,9 +127,9 @@ def plotting3D(res, initial_params, opt_var):
         colorscale='Viridis', 
         **common_surface_props,
         hovertemplate="<b style='color:red;'>reversibility</b><br>" + 
-                  "x: %{x}<br>" +
-                  "y: %{y}<br>" +
-                  "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Surface(
         z=Z_ir,  
@@ -138,9 +138,9 @@ def plotting3D(res, initial_params, opt_var):
         colorscale='RdBu_r', 
         **common_surface_props,
         hovertemplate="<b style='color:red;'>irreversibility ratio</b><br>" + 
-                    "x: %{x}<br>" +
-                    "y: %{y}<br>" +
-                    "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Surface(
         z=Z_ep,  
@@ -149,18 +149,18 @@ def plotting3D(res, initial_params, opt_var):
         colorscale='rdylgn_r', 
         **common_surface_props,
         hovertemplate="<b style='color:red;'>entropy production rate</b><br>" + 
-                    "x: %{x}<br>" +
-                    "y: %{y}<br>" +
-                    "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Surface(
         z=Z_line, x=X_line, y=Y_line, 
         name='constraint', legendgroup='constraint', 
         colorscale=[[0, 'red'], [1, 'red']], showlegend=True, showscale=False, opacity=0.1,
         hovertemplate="<b style='color:gray;'>constrain</b><br>" + 
-                    "x: %{x}<br>" +
-                    "y: %{y}<br>" +
-                    "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Scatter3d(
         x=x_min, y=y_min, z=z_min,
@@ -168,27 +168,42 @@ def plotting3D(res, initial_params, opt_var):
         name='minimum', showlegend=True,
         marker=dict(size=5, color='red', symbol='circle'),
         hovertemplate="<b style='color:red;'>minimum</b><br>" + 
-                    "x: %{x}<br>" +
-                    "y: %{y}<br>" +
-                    "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
 
     fig.update_layout(
-        title=dict(text='3D Plot'), 
+        title=dict(
+            text="Objective function surface, Constraint and Minimum",
+            x=0.5,
+            y=0.005,
+            xanchor="center",
+            yanchor="bottom",
+            font=dict(family="Arial, sans-serif​", size=13, color="#abacb0")
+        ),
         autosize=True,
-        height=510,
-        margin=dict(l=10, r=10, b=10, t=40),
+        height=520,
+        margin=dict(l=10, r=10, b=40, t=30),
         scene=dict(
-            xaxis_title=f'<i>{var_name}<sub>g</sub></i>',
-            yaxis_title=f'<i>{var_name}<sub>p</sub></i>',
-            zaxis_title=f'<i>w</i> · 10<sup>−{POWER_OF_10:.0f}</sup>',
-            xaxis_title_font=DEFAULT_FONT,
-            yaxis_title_font=DEFAULT_FONT,
-            zaxis_title_font=DEFAULT_FONT,
+            xaxis=dict(
+                title=f'<i>{var_name}<sub>g</sub></i>',
+                title_font=DEFAULT_FONT,
+                range=[0, 1],
+            ),
+            yaxis=dict(
+                title=f'<i>{var_name}<sub>p</sub></i>',
+                title_font=DEFAULT_FONT,
+                range=[0, 1],
+            ),
+            zaxis=dict(
+                title=f'<i>w</i> · 10<sup>−{POWER_OF_10:.0f}</sup>',
+                title_font=DEFAULT_FONT,
+            ),
             # aspectratio=dict(x=1, y=1, z=1),
             aspectmode='cube',
             camera=dict(
-                eye=dict(x=2, y=1, z=0.5)
+                eye=dict(x=2, y=1., z=0.5)
             )
         ),
         legend=dict(
@@ -217,13 +232,8 @@ def plotting_sensitivity(data, labels, power, theme_session):
     """
 
     fig = make_subplots(
-        rows=2, cols=2,
-        specs=[[{"rowspan": 2}, {}],
-            [None, {}]],
-        shared_xaxes=True,
-        # subplot_titles=("First-row Subplot","Second-row Subplots", None,  None),
-        vertical_spacing=0.08,
-        horizontal_spacing=0.1
+        rows=1, cols=3,
+        horizontal_spacing=0.075,
     )
 
     color_cycle = DEFAULT_PLOTLY_COLORS[:len(labels)]  # Get as many colors as labels
@@ -256,19 +266,8 @@ def plotting_sensitivity(data, labels, power, theme_session):
             line=dict(color=color),
             name=label, legendgroup=label,
             showlegend=True,
-
-            ), row=1, col=1
-        )
-
-    for df, label, color in zip(data, labels, color_cycle):
-        fig.add_trace(go.Scatter(
-            x=df.index, y=df['c*_g'],
-            mode='lines',
-            line=dict(color=color),
-            name=label, legendgroup=label, 
-            showlegend=False,
-            
-            ), row=1, col=2
+            ), 
+            row=1, col=1
         )
 
     for df, label, color in zip(data, labels, color_cycle):
@@ -278,34 +277,65 @@ def plotting_sensitivity(data, labels, power, theme_session):
             line=dict(color=color),
             name=label, legendgroup=label, 
             showlegend=False,
-            ), row=2, col=2
+            ), 
+            row=1, col=2
         )
     
+    for df, label, color in zip(data, labels, color_cycle):
+        fig.add_trace(go.Scatter(
+            x=df.index, y=df['c*_g'],
+            mode='lines',
+            line=dict(color=color),
+            name=label, legendgroup=label, 
+            showlegend=False,
+            ), 
+            row=1, col=3
+        )
+
+    
     fig.update_layout(
-        title="Plot",
+        title=dict(
+            text="Influence of the parameter on the optimal value and optimal solutions",
+            x=0.5,
+            y=0.01, 
+            xanchor="center",
+            yanchor="bottom",
+            font=dict(family="Arial Light, sans-serif​", size=13, color="#84858B")
+        ),
+
         autosize=True,
         # height=450,
-        margin=dict(l=10, r=10, b=10, t=40),
+        margin=dict(l=5, r=5, b=80, t=10),
         xaxis=dict(
             title=x_title,
             title_font=DEFAULT_FONT,
-            title_standoff=10
+            title_standoff=18
+        ),
+        xaxis2=dict(
+            title=x_title,
+            title_font=DEFAULT_FONT,
+            title_standoff=18,
+        ),
+        xaxis3=dict(
+            title=x_title,
+            title_font=DEFAULT_FONT,
+            title_standoff=18,
         ),
 
         yaxis=dict(
             title=f'<i>min(w)</i> · 10<sup>−{power:.0f}</sup>',
             title_font=DEFAULT_FONT,
-            title_standoff=10
+            title_standoff=18
         ),
         yaxis2=dict(
-            title='<i>c*<sub>g</sub></i>',
-            title_font=DEFAULT_FONT,
-            title_standoff=10
-        ),
-        yaxis3=dict(
             title='<i>ε*<sub>g</sub></i>',
             title_font=DEFAULT_FONT,
-            title_standoff=10
+            title_standoff=18
+        ),
+        yaxis3=dict(
+            title='<i>c*<sub>g</sub></i>',
+            title_font=DEFAULT_FONT,
+            title_standoff=18
         ),
         legend=dict(
             yanchor="top", y=1.1,
@@ -313,16 +343,7 @@ def plotting_sensitivity(data, labels, power, theme_session):
             orientation="h",
             
         ),
-        hoversubplots="axis",
         hovermode='x',
-        xaxis3={"matches": "x"},
-    )
-
-    fig.update_xaxes(
-        title_text=x_title,
-        title_font=DEFAULT_FONT,
-        title_standoff=10,
-        row=2, col=2 
     )
 
     st.plotly_chart(fig, use_container_width=True, config=config, theme=theme_session)
