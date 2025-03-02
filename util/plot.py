@@ -127,9 +127,9 @@ def plotting3D(res, initial_params, opt_var):
         colorscale='Viridis', 
         **common_surface_props,
         hovertemplate="<b style='color:red;'>reversibility</b><br>" + 
-                  "x: %{x}<br>" +
-                  "y: %{y}<br>" +
-                  "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Surface(
         z=Z_ir,  
@@ -138,9 +138,9 @@ def plotting3D(res, initial_params, opt_var):
         colorscale='RdBu_r', 
         **common_surface_props,
         hovertemplate="<b style='color:red;'>irreversibility ratio</b><br>" + 
-                    "x: %{x}<br>" +
-                    "y: %{y}<br>" +
-                    "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Surface(
         z=Z_ep,  
@@ -149,18 +149,18 @@ def plotting3D(res, initial_params, opt_var):
         colorscale='rdylgn_r', 
         **common_surface_props,
         hovertemplate="<b style='color:red;'>entropy production rate</b><br>" + 
-                    "x: %{x}<br>" +
-                    "y: %{y}<br>" +
-                    "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Surface(
         z=Z_line, x=X_line, y=Y_line, 
         name='constraint', legendgroup='constraint', 
         colorscale=[[0, 'red'], [1, 'red']], showlegend=True, showscale=False, opacity=0.1,
         hovertemplate="<b style='color:gray;'>constrain</b><br>" + 
-                    "x: %{x}<br>" +
-                    "y: %{y}<br>" +
-                    "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
     fig.add_trace(go.Scatter3d(
         x=x_min, y=y_min, z=z_min,
@@ -168,16 +168,23 @@ def plotting3D(res, initial_params, opt_var):
         name='minimum', showlegend=True,
         marker=dict(size=5, color='red', symbol='circle'),
         hovertemplate="<b style='color:red;'>minimum</b><br>" + 
-                    "x: %{x}<br>" +
-                    "y: %{y}<br>" +
-                    "z: %{z}<extra></extra>"
+            "x: %{x}<br>" +
+            "y: %{y}<br>" +
+            "z: %{z}<extra></extra>"
     ))
 
     fig.update_layout(
-        title=dict(text='3D Plot'), 
+        title=dict(
+            text="Objective function surface, Constraint and Minimum",
+            x=0.5,
+            y=0.005,
+            xanchor="center",
+            yanchor="bottom",
+            font=dict(family="Arial, sans-serif​", size=13, color="#abacb0")
+        ),
         autosize=True,
-        height=510,
-        margin=dict(l=10, r=10, b=10, t=40),
+        height=520,
+        margin=dict(l=10, r=10, b=40, t=30),
         scene=dict(
             xaxis=dict(
                 title=f'<i>{var_name}<sub>g</sub></i>',
@@ -196,7 +203,7 @@ def plotting3D(res, initial_params, opt_var):
             # aspectratio=dict(x=1, y=1, z=1),
             aspectmode='cube',
             camera=dict(
-                eye=dict(x=2, y=1, z=0.5)
+                eye=dict(x=2, y=1., z=0.5)
             )
         ),
         legend=dict(
@@ -293,7 +300,7 @@ def plotting_sensitivity(data, labels, power, theme_session):
             y=0.01, 
             xanchor="center",
             yanchor="bottom",
-            font=dict(family="Arial, sans-serif​", size=13, color="#84858B")
+            font=dict(family="Arial Light, sans-serif​", size=13, color="#84858B")
         ),
 
         autosize=True,
