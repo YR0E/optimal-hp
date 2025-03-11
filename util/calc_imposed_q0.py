@@ -191,10 +191,11 @@ def find_minimum(obj_func, initial_params, config):
     return result
 
 
-def find_minimum_vectorized(obj_func, opt_var, opt_config, 
-                            guess_bound, *params, 
-                            method='SLSQP', tol=1e-16,
-                            warm_start=True):
+def find_minimum_vectorized(
+        obj_func, opt_var, opt_config, 
+        guess_bound, *params, 
+        method='SLSQP', tol=1e-16,
+        warm_start=True):
     """
     Finds the minimum of the objective function for a vector of variables.
 
@@ -212,8 +213,11 @@ def find_minimum_vectorized(obj_func, opt_var, opt_config,
     """
     x1, x2 = guess_bound    # e*_i (x0, xmin, xmax), c*_i (...)
     results = []
+    s_values = []
 
     for i, var in enumerate(opt_var):
+        
+        # initial_params must be (e_total, c_total, q0, t_s, I or s, MULTIPLIER)
         if opt_config[1] == 'e':
             initial_params = (var, *params)
         elif opt_config[1] == 'c':
@@ -240,6 +244,19 @@ def find_minimum_vectorized(obj_func, opt_var, opt_config,
         ]
         
 
+        if obj_func.__name__ == 'objective_function_ep_rate':
+            e_total = initial_params[0]
+            c_total = initial_params[1]
+            q0 = initial_params[2]
+            t_s = initial_params[3] 
+            I = initial_params[4]
+            MULTIPLIER = initial_params[-1]
+
+            s = ((I-1)*q0/MULTIPLIER)/(t_s - (2*q0/(MULTIPLIER*c_total))*(8/e_total - 1))*MULTIPLIER
+            initial_params = (e_total, c_total, q0, t_s, s, MULTIPLIER)
+            
+            s_values.append(s)
+
         # Perform minimization
         result = minimize(
             obj_func,
@@ -253,4 +270,7 @@ def find_minimum_vectorized(obj_func, opt_var, opt_config,
 
         results.append(result)  # Store the minimized function value
 
-    return np.array(results)
+    if obj_func.__name__ == 'objective_function_ep_rate':
+        return np.array(results), np.array(s_values)
+    else:
+        return np.array(results)

@@ -279,7 +279,7 @@ DEFAULT_SETTING_VALUES = {
 
     'c': {
         'name': '$c_{total}$',
-        'step': 0.025,
+        'step': 0.02,
         'step_widget': (0.005, 0.1, 0.005),
         'range': (0.4, 1.0),
         'range_widget': (0.2, 1.0),
@@ -392,10 +392,17 @@ def results_to_df(results, param, param_name, fix=True):
     columns = [param_name, 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
     
     for key, result_list in results.items():
-        df = pd.DataFrame.from_records(
-            [(p, r.fun * MULTIPLIER, *r.x) for p, r in zip(param, result_list)],
-            columns=columns
-        ).set_index(param_name)
+        if key=='ep':
+            df = pd.DataFrame.from_records(
+                    [(p, r.fun * MULTIPLIER, *r.x) for p, r in zip(param, result_list[0])],
+                    columns=columns
+                ).set_index(param_name)
+            df['s'] = result_list[1]
+        else:
+            df = pd.DataFrame.from_records(
+                [(p, r.fun * MULTIPLIER, *r.x) for p, r in zip(param, result_list)],
+                columns=columns
+            ).set_index(param_name)
         
         # Set values out of range (<0 or >9999) to None (to handle optimization errors)
         if fix:
@@ -564,10 +571,10 @@ def tab_e_total_sa():
         )
         init_t_s = init_slider('$t_{s}:$', 'e_t_s', 0.8, 1.0, 0.01)
         init_I = init_slider('$I:$', 'e_I', 1.0, 3.0, 0.01)
-        init_s = init_slider(
-            '$s:$', 'e_s', 0.1, 20.0, 0.01,
-            help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
-        )
+        # init_s = init_slider(
+        #     '$s:$', 'e_s', 0.1, 20.0, 0.01,
+        #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
+        # )
 
         st.button(
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
@@ -580,7 +587,7 @@ def tab_e_total_sa():
     initial_params = {
         'r': [init_c_t, init_q, init_t_s, MULTIPLIER],
         'ir': [init_c_t, init_q, init_t_s, init_I, MULTIPLIER],
-        'ep': [init_c_t, init_q, init_t_s, init_s, MULTIPLIER]
+        'ep': [init_c_t, init_q, init_t_s, init_I, MULTIPLIER]     # s=f(I,q,...) in find_minimum_vectorized
     }
  
     # Perform optimization
@@ -650,10 +657,10 @@ def tab_c_total_sa():
         )
         init_t_s = init_slider('$t_{s}:$', 'c_t_s', 0.8, 1.0, 0.01)
         init_I = init_slider('$I:$', 'c_I', 1.0, 3.0, 0.01)
-        init_s = init_slider(
-            '$s:$', 'c_s', 0.1, 30.0, 0.01,
-            help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
-        )
+        # init_s = init_slider(
+        #     '$s:$', 'c_s', 0.1, 30.0, 0.01,
+        #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
+        # )
 
         st.button(
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
@@ -666,7 +673,7 @@ def tab_c_total_sa():
     initial_params = {
         'r': [init_eps_t, init_q, init_t_s, MULTIPLIER],
         'ir': [init_eps_t, init_q, init_t_s, init_I, MULTIPLIER],
-        'ep': [init_eps_t, init_q, init_t_s, init_s, MULTIPLIER]
+        'ep': [init_eps_t, init_q, init_t_s, init_I, MULTIPLIER]     # s=f(I,q,...) in find_minimum_vectorized
     }
     
     # Perform optimization
@@ -732,10 +739,10 @@ def tab_q0_sa():
         init_c_t = init_slider('$c_{total}:$', 'q_c_t', 0.1, 1.0, 0.01)
         init_t_s = init_slider('$t_{s}:$', 'q_t_s', 0.8, 1.0, 0.01)
         init_I = init_slider('$I:$', 'q_I', 1.0, 3.0, 0.01)
-        init_s = init_slider(
-            '$s:$', 'q_s', 0.1, 30.0, 0.01,
-            help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
-        )
+        # init_s = init_slider(
+        #     '$s:$', 'q_s', 0.1, 30.0, 0.01,
+        #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
+        # )
 
         st.button(
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
@@ -748,7 +755,7 @@ def tab_q0_sa():
     initial_params = {
         'r': [init_eps_t, init_c_t, init_t_s, MULTIPLIER],
         'ir': [init_eps_t, init_c_t, init_t_s, init_I, MULTIPLIER],
-        'ep': [init_eps_t, init_c_t, init_t_s, init_s, MULTIPLIER]
+        'ep': [init_eps_t, init_c_t, init_t_s, init_I, MULTIPLIER]     # s=f(I,q,...) in find_minimum_vectorized
     }
 
     # Perform optimization
@@ -817,10 +824,10 @@ def tab_ts_sa():
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
         init_I = init_slider('$I:$', 't_I', 1.0, 3.0, 0.01)
-        init_s = init_slider(
-            '$s:$', 't_s', 0.1, 30.0, 0.01,
-            help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
-        )
+        # init_s = init_slider(
+        #     '$s:$', 't_s', 0.1, 30.0, 0.01,
+        #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
+        # )
 
         st.button(
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
@@ -833,7 +840,7 @@ def tab_ts_sa():
     initial_params = {
         'r': [init_eps_t, init_c_t, init_q, MULTIPLIER],
         'ir': [init_eps_t, init_c_t, init_q, init_I, MULTIPLIER],
-        'ep': [init_eps_t, init_c_t, init_q, init_s, MULTIPLIER]
+        'ep': [init_eps_t, init_c_t, init_q, init_I, MULTIPLIER]      # s=f(I,q,...) in find_minimum_vectorized
     }
 
     
@@ -960,6 +967,8 @@ def tab_s_sa():
         txt = f'(warm starting*)' if warm_start else ''
         
         display_info(guess_bound, info=txt)
+
+        st.warning('updating...')
     
     with col_control:
         # sliders
@@ -1022,6 +1031,7 @@ def sensitivity_analysis():
     init_session_state(DEFAULT_SA_SLIDERS)
 
     st.info(r'Choose a variable/parameter to analyze its impact on the minimum power consumption $min(w)$')
+    st.warning('updating...')
     tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs(
         [
         r'$\varepsilon_{total}$', '$c_{total}$', 
