@@ -265,7 +265,8 @@ DEFAULT_SETTING_GLOBAL = {
     'c_0': 0.1,
     'c_bnds': (0.0, 1.0),
     'warm_start': True,
-    'cut_off': True
+    'cut_off': True,
+    'plot_param': 'Hot loop'
 }
 DEFAULT_SETTING_VALUES = {
     'e': {
@@ -451,7 +452,7 @@ def display_results(dfs):
             st.write("Entropy production rate:")
             st.dataframe(df2, height=height)
 
-def display_info(x0_bounds, info=''):
+def display_info(x0_bounds, info, plot_param):
     """
     Displays optimization information.
 
@@ -470,7 +471,9 @@ def display_info(x0_bounds, info=''):
 
         Initial guesses {info}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
         Bounds: $\quad \varepsilon^*_{{i}} \in [$`{e_min}, {e_max}`$]$;
-        $\,\, c^*_{{i}} \in [$`{c_min}, {c_max}`$]$  
+        $\,\, c^*_{{i}} \in [$`{c_min}, {c_max}`$]$ 
+
+        Plots with respect to `{plot_param}`
         '''
     )
 
@@ -560,9 +563,9 @@ def settings_popover(var, defaults):
             help='Use previous results as initial guess for next iteration'
         )
         cuttoff_outliers = st.toggle("Outliers to `None`", key=f'{var}_cut_off')
+        plot_param = st.radio('Plots w.r.t.:', ['Hot loop', 'Cold loop'], index=0, key=f'{var}_plot_param')
 
-
-        return step_size, var_range, opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers
+        return step_size, var_range, opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_param
 
 @st.fragment
 def tab_e_total_sa():
@@ -571,10 +574,12 @@ def tab_e_total_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('e', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
         
-        display_info(guess_bound, info=txt)
+        display_info(guess_bound, txt, plot_param)
+
 
     with col_control:
         # sliders
@@ -635,7 +640,8 @@ def tab_e_total_sa():
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
+        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
+        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
         POWER_OF_10,
         theme_session
     )
@@ -649,10 +655,11 @@ def tab_c_total_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('c', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
-        
-        display_info(guess_bound, info=txt)
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
+
+        display_info(guess_bound, txt, plot_param)
 
 
     with col_control:
@@ -714,7 +721,8 @@ def tab_c_total_sa():
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
+        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
+        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
         POWER_OF_10,
         theme_session
     )
@@ -728,11 +736,13 @@ def tab_q0_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('q', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
-        
-        display_info(guess_bound, info=txt)
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
+
+        display_info(guess_bound, txt, plot_param)
     
+
     with col_control:
         # sliders
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'q_e_t', 0.4, 4.0, 0.01)
@@ -789,7 +799,8 @@ def tab_q0_sa():
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
+        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
+        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
         POWER_OF_10,
         theme_session
     )
@@ -803,10 +814,12 @@ def tab_ts_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('t', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
         
-        display_info(guess_bound, info=txt)
+        display_info(guess_bound, txt, plot_param)
+
 
     with col_control:
         # sliders
@@ -868,7 +881,8 @@ def tab_ts_sa():
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
+        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
+        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels 
         POWER_OF_10,
         theme_session
     )
@@ -882,11 +896,13 @@ def tab_ir_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('I', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
-        
-        display_info(guess_bound, info=txt)
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
+
+        display_info(guess_bound, txt, plot_param)
     
+
     with col_control:
         # sliders
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'I_e_t', 0.4, 4.0, 0.01)
@@ -936,7 +952,8 @@ def tab_ir_sa():
 
     plotting_sensitivity(
         [df1, df2], 
-        ['irrevers. ratio', 'entropy prod. rate'], 
+        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
+        ['irrevers. ratio', 'entropy prod. rate'],                      # labels
         POWER_OF_10,
         theme_session
     )

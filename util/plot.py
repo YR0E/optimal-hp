@@ -220,7 +220,7 @@ def plotting3D(res, initial_params, opt_var):
 
 
 
-def plotting_sensitivity(data, labels, power, theme_session):
+def plotting_sensitivity(data, params, labels, power, theme_session):
     """
     Plots sensitivity analysis of optimization results and optima.
 
@@ -263,10 +263,16 @@ def plotting_sensitivity(data, labels, power, theme_session):
     else:
         x_title = f'<i>{varname}</i>'
 
+    ytitle_index = params[1][-1]    # for example, g from e*_g
+    ytitles = [
+        f'<i>min(w)</i> · 10<sup>−{power:.0f}</sup>',
+        f'<i>ε*<sub>{ytitle_index}</sub></i>',
+        f'<i>c*<sub>{ytitle_index}</sub></i>',
+    ]
 
     for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
         fig.add_trace(go.Scatter(
-            x=df.index, y=df.minw,
+            x=df.index, y=df[params[0]],
             mode='lines',
             line=dict(color=color, dash=dash),
             name=label, legendgroup=label,
@@ -277,7 +283,7 @@ def plotting_sensitivity(data, labels, power, theme_session):
 
     for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
         fig.add_trace(go.Scatter(
-            x=df.index, y=df['ε*_g'],
+            x=df.index, y=df[params[1]],
             mode='lines',
             line=dict(color=color, dash=dash),
             name=label, legendgroup=label, 
@@ -288,7 +294,7 @@ def plotting_sensitivity(data, labels, power, theme_session):
     
     for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
         fig.add_trace(go.Scatter(
-            x=df.index, y=df['c*_g'],
+            x=df.index, y=df[params[2]],
             mode='lines',
             line=dict(color=color, dash=dash),
             name=label, legendgroup=label, 
@@ -328,17 +334,17 @@ def plotting_sensitivity(data, labels, power, theme_session):
         ),
 
         yaxis=dict(
-            title=f'<i>min(w)</i> · 10<sup>−{power:.0f}</sup>',
+            title=ytitles[0],
             title_font=DEFAULT_FONT,
             title_standoff=18
         ),
         yaxis2=dict(
-            title='<i>ε*<sub>g</sub></i>',
+            title=ytitles[1],
             title_font=DEFAULT_FONT,
             title_standoff=18
         ),
         yaxis3=dict(
-            title='<i>c*<sub>g</sub></i>',
+            title=ytitles[2],
             title_font=DEFAULT_FONT,
             title_standoff=18
         ),
