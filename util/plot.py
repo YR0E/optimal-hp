@@ -237,6 +237,8 @@ def plotting_sensitivity(data, labels, power, theme_session):
     )
 
     color_cycle = DEFAULT_PLOTLY_COLORS[:len(labels)]  # Get as many colors as labels
+    dash_cycle = ['5px', 'solid', 'solid']
+
     # Set the configuration for the Plotly chart, including the resolution settings
     config = {
         "toImageButtonOptions": {
@@ -259,33 +261,33 @@ def plotting_sensitivity(data, labels, power, theme_session):
         x_title = f'<i>{varname}</i>'
 
 
-    for df, label, color in zip(data, labels, color_cycle):
+    for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
         fig.add_trace(go.Scatter(
             x=df.index, y=df.minw,
             mode='lines',
-            line=dict(color=color),
+            line=dict(color=color, dash=dash),
             name=label, legendgroup=label,
             showlegend=True,
             ), 
             row=1, col=1
         )
 
-    for df, label, color in zip(data, labels, color_cycle):
+    for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
         fig.add_trace(go.Scatter(
             x=df.index, y=df['ε*_g'],
             mode='lines',
-            line=dict(color=color),
+            line=dict(color=color, dash=dash),
             name=label, legendgroup=label, 
             showlegend=False,
             ), 
             row=1, col=2
         )
     
-    for df, label, color in zip(data, labels, color_cycle):
+    for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
         fig.add_trace(go.Scatter(
             x=df.index, y=df['c*_g'],
             mode='lines',
-            line=dict(color=color),
+            line=dict(color=color, dash=dash),
             name=label, legendgroup=label, 
             showlegend=False,
             ), 
