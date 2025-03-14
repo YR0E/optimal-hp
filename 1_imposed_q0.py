@@ -29,21 +29,21 @@ else:
 MULTIPLIER = 10**4
 POWER_OF_10 = np.log10(MULTIPLIER)
 DEFAULT_VALUES_EPS = {
-    'e_t_e': 2.0,
-    'c_g_e': 0.2,
-    'c_p_e': 0.2,
-    'q0_e': 10.0,
+    'e_t_e': 2.4,
+    'c_g_e': 0.4,
+    'c_p_e': 0.4,
+    'q0_e': 20.0,
     't_s_e': 0.9,
-    'I_e': 1.01,
+    'I_e': 1.05,
     # 's_e': 0.1
 }
 DEFAULT_VALUES_C = {
-    'e_g_c': 0.5,
-    'e_p_c': 0.5,
+    'e_g_c': 0.6,
+    'e_p_c': 0.6,
     'c_t_c': 0.8,
-    'q0_c': 10.0,
+    'q0_c': 20.0,
     't_s_c': 0.9,
-    'I_c': 1.01,
+    'I_c': 1.05,
     # 's_c': 0.1
 }
 
@@ -122,18 +122,18 @@ def tab_eps_total_plane():
             r'$\varepsilon_{total}:$', 'e_t_e', 
             0.4, 4.0, 0.1, fmt="%.1f"
         )
-        init_c_g = init_slider('$c_{g}:$', 'c_g_e', 0.05, 0.5, 0.01)
-        init_c_p = init_slider('$c_{p}:$', 'c_p_e', 0.05, 0.5, 0.01)
+        init_c_g = init_slider('$c_{g}:$', 'c_g_e', 0.01, 1.0, 0.01)
+        init_c_p = init_slider('$c_{p}:$', 'c_p_e', 0.01, 1.0, 0.01)
         init_q = init_slider(
-            '$q_{0}:$', 'q0_e', 1.0, 50.0, 0.1, fmt="%.1f",
+            '$q_{0}:$', 'q0_e', 1.0, 100.0, 0.1, fmt="%.1f",
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
         init_t_s = init_slider('$t_{s}:$', 't_s_e', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'I_e', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'I_e', 1.0, 2.0, 0.01)
         
         s_value = ((init_I-1)*init_q/MULTIPLIER)/(init_t_s - (2*init_q/(MULTIPLIER*(init_c_g+init_c_p)))*(8/init_eps_total - 1))*MULTIPLIER
         init_s = init_slider(
-            '$s:$', 's_e', 0.1, 50.0, 0.01, value=s_value,
+            '$s:$', 's_e', 0.0, 100.0, 0.01, value=s_value,
             help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}},\quad s=f(I, q_{{0}}, t_s, \varepsilon, c) $'
         )
 
@@ -171,7 +171,7 @@ def tab_eps_total_plane():
         }, 
         index=['reversibility', 'irreversibility ratio', 'entropy production rate']
     )
-    st.dataframe(df)
+    st.dataframe(df, width=640)
 
 @st.fragment
 def tab_c_total_plane():
@@ -180,19 +180,19 @@ def tab_c_total_plane():
 
     #=====SLIDERS=====
     with col_control:
-        init_c_total = init_slider('$c_{total}:$', 'c_t_c', 0.1, 1.0, 0.01)
-        init_e_g = init_slider(r'$\varepsilon_{g}:$', 'e_g_c', 0.1, 1.0, 0.01)
-        init_e_p = init_slider(r'$\varepsilon_{p}:$', 'e_p_c', 0.1, 1.0, 0.01)
+        init_c_total = init_slider('$c_{total}:$', 'c_t_c', 0.01, 1.0, 0.01)
+        init_e_g = init_slider(r'$\varepsilon_{g}:$', 'e_g_c', 0.01, 1.0, 0.01)
+        init_e_p = init_slider(r'$\varepsilon_{p}:$', 'e_p_c', 0.01, 1.0, 0.01)
         init_q = init_slider(
-            '$q_{0}:$', 'q0_c', 1.0, 50.0, 0.1, fmt="%.1f",
+            '$q_{0}:$', 'q0_c', 1.0, 100.0, 0.1, fmt="%.1f",
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
         init_t_s = init_slider('$t_{s}:$', 't_s_c', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'I_c', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'I_c', 1.0, 2.0, 0.01)
         
         s_value = ((init_I-1)*init_q/MULTIPLIER)/(init_t_s - (2*init_q/(MULTIPLIER*init_c_total))*(8/(init_e_g+init_e_p) - 1))*MULTIPLIER
         init_s = init_slider(
-            '$s:$', 's_c', 0.1, 50.0, 0.01, value=s_value,
+            '$s:$', 's_c', 0.0, 100.0, 0.01, value=s_value,
             help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}},\quad s=f(I, q_{{0}}, t_s, \varepsilon, c) $'
         )
 
@@ -230,7 +230,7 @@ def tab_c_total_plane():
         }, 
         index=['reversibility', 'irreversibility ratio', 'entropy production rate']
     )
-    st.dataframe(df)
+    st.dataframe(df, width=520)
 
 
 #============MAIN CALCULATION==============
@@ -282,7 +282,7 @@ DEFAULT_SETTING_VALUES = {
         'step': 0.02,
         'step_widget': (0.005, 0.1, 0.005),
         'range': (0.4, 1.0),
-        'range_widget': (0.2, 1.0),
+        'range_widget': (0.1, 1.0),
         **DEFAULT_SETTING_GLOBAL
     },
 
@@ -325,52 +325,52 @@ DEFAULT_SETTING_VALUES = {
 DEFAULT_SA_SLIDERS = {
     'e': {
         'e_t': (2.0, 4.0),
-        'c_t': 0.7,
-        'q0': 30.0,
+        'c_t': 0.8,
+        'q0': 50.0,
         't_s': 0.9,
         'I': 1.1,
-        's': 3.0
+        # 's': 3.0
     },
 
     'c': {
-        'e_t': 2.0,
+        'e_t': 3.2,
         'c_t': (0.4, 1.0),
-        'q0': 30.0,
+        'q0': 50.0,
         't_s': 0.9,
         'I': 1.1,
-        's': 3.0
+        # 's': 3.0
     },
 
     'q': {
-        'e_t': 2.0,
-        'c_t': 0.5,
+        'e_t': 3.2,
+        'c_t': 0.8,
         'q0': (10.0, 80.0),
         't_s': 0.9,
         'I': 1.1,
-        's': 3.0
+        # 's': 3.0
     },
 
     't': {
-        'e_t': 2.0,
-        'c_t': 0.5,
-        'q0': 30.0,
+        'e_t': 3.2,
+        'c_t': 0.8,
+        'q0': 50.0,
         't_s': (0.85, 0.95),
         'I': 1.1,
-        's': 3.0
+        # 's': 3.0
     },
     
     'I': {
-        'e_t': 2.0,
-        'c_t': 0.5,
-        'q0': 30.0,
+        'e_t': 3.2,
+        'c_t': 0.8,
+        'q0': 50.0,
         't_s': 0.9,
         'I': (1.0, 2.0),
     },
 
     's': {
-        'e_t': 2.0,
-        'c_t': 0.5,
-        'q0': 30.0,
+        'e_t': 3.2,
+        'c_t': 0.8,
+        'q0': 50.0,
         't_s': 0.9,
         's': (0.0, 25.0)
     }
@@ -570,7 +570,7 @@ def tab_e_total_sa():
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
         init_t_s = init_slider('$t_{s}:$', 'e_t_s', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'e_I', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'e_I', 1.0, 2.0, 0.01)
         # init_s = init_slider(
         #     '$s:$', 'e_s', 0.1, 20.0, 0.01,
         #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
@@ -656,7 +656,7 @@ def tab_c_total_sa():
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
         init_t_s = init_slider('$t_{s}:$', 'c_t_s', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'c_I', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'c_I', 1.0, 2.0, 0.01)
         # init_s = init_slider(
         #     '$s:$', 'c_s', 0.1, 30.0, 0.01,
         #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
@@ -738,7 +738,7 @@ def tab_q0_sa():
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'q_e_t', 0.4, 4.0, 0.01)
         init_c_t = init_slider('$c_{total}:$', 'q_c_t', 0.1, 1.0, 0.01)
         init_t_s = init_slider('$t_{s}:$', 'q_t_s', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'q_I', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'q_I', 1.0, 2.0, 0.01)
         # init_s = init_slider(
         #     '$s:$', 'q_s', 0.1, 30.0, 0.01,
         #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
@@ -823,7 +823,7 @@ def tab_ts_sa():
             '$q_{0}:$', 't_q0', 1.0, 100.0, 0.1, fmt="%.1f",
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
-        init_I = init_slider('$I:$', 't_I', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 't_I', 1.0, 2.0, 0.01)
         # init_s = init_slider(
         #     '$s:$', 't_s', 0.1, 30.0, 0.01,
         #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
