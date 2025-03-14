@@ -3,7 +3,10 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.io as pio
+
+from scipy.signal import savgol_filter
 from streamlit_theme import st_theme
+
 from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized
 from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate
 from util.plot import plotting3D, plotting_sensitivity
@@ -266,6 +269,7 @@ DEFAULT_SETTING_GLOBAL = {
     'c_bnds': (0.0, 1.0),
     'warm_start': True,
     'cut_off': True,
+    'smooth': False,
     'plot_sens': True,
     'plot_param': 'Hot loop'
 }
@@ -567,7 +571,8 @@ def settings_popover(var, defaults):
             help='Use previous results as initial guess for next iteration'
         )
         cuttoff_outliers = st.toggle("Outliers to `None`", key=f'{var}_cut_off')
-        
+        smooth = st.toggle("Smooth results", key=f'{var}_smooth')
+
         st.divider()
         plot_sens = st.toggle("Plot sensitivity", key=f'{var}_plot_sens')
         plot_param = st.radio(
@@ -579,16 +584,22 @@ def settings_popover(var, defaults):
 
         return (step_size, var_range, opt_method, tolerance, 
                 guess_bound, warm_start, cuttoff_outliers, 
-                plot_sens, plot_param
+                smooth, plot_sens, plot_param
         )
-def calculate_gradient(dfs):  
+    
+def calculate_gradient(dfs, smooth=False):  
     
     columns = [col for col in dfs[0].columns if not (col.endswith('ev') or col.endswith('cd'))]
+    window_length = len(dfs[0]) 
+    polyorder = 1               # linear fit
 
     for df in dfs:
         M1 = MULTIPLIER if df.index.name=='q0' or df.index.name=='s' else 1
         for col in columns:
             M2 = MULTIPLIER if col=='minw' else 1
+            if smooth and col!='minw':
+                df[col] = savgol_filter(df[col].values, window_length, polyorder)
+
             df[f"grad_{col}"] = np.gradient(df[col]/M2, df.index/M1)
 
 @st.fragment
@@ -598,7 +609,7 @@ def tab_e_total_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('e', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_sens, plot_param = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
         param_index = 'p' if plot_param=='Hot loop' else 'g'
         
@@ -662,7 +673,7 @@ def tab_e_total_sa():
     runtime_info(st_runtime_info, start_time, txt)
 
 
-    calculate_gradient([df1, df2, df3])
+    calculate_gradient([df1, df2, df3], smooth=smooth)
 
     plotting_sensitivity(
         [df1, df2, df3], 
@@ -682,7 +693,7 @@ def tab_c_total_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('c', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_sens, plot_param = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
         param_index = 'p' if plot_param=='Hot loop' else 'g'
 
@@ -745,7 +756,7 @@ def tab_c_total_sa():
 
     runtime_info(st_runtime_info, start_time, txt)
 
-    calculate_gradient([df1, df2, df3])
+    calculate_gradient([df1, df2, df3], smooth=smooth)
 
     plotting_sensitivity(
         [df1, df2, df3], 
@@ -765,7 +776,7 @@ def tab_q0_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('q', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_sens, plot_param = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
         param_index = 'p' if plot_param=='Hot loop' else 'g'
 
@@ -825,7 +836,7 @@ def tab_q0_sa():
 
     runtime_info(st_runtime_info, start_time, txt)
 
-    calculate_gradient([df1, df2, df3])
+    calculate_gradient([df1, df2, df3], smooth=smooth)
 
     plotting_sensitivity(
         [df1, df2, df3], 
@@ -845,7 +856,7 @@ def tab_ts_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('t', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_sens, plot_param = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
         param_index = 'p' if plot_param=='Hot loop' else 'g'
         
@@ -909,7 +920,7 @@ def tab_ts_sa():
 
     runtime_info(st_runtime_info, start_time, txt)
 
-    calculate_gradient([df1, df2, df3])
+    calculate_gradient([df1, df2, df3], smooth=smooth)
 
     plotting_sensitivity(
         [df1, df2, df3], 
@@ -929,7 +940,7 @@ def tab_ir_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('I', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_sens, plot_param = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
         param_index = 'p' if plot_param=='Hot loop' else 'g'
 
@@ -984,7 +995,7 @@ def tab_ir_sa():
     runtime_info(st_runtime_info, start_time, txt)
 
 
-    calculate_gradient([df1, df2])
+    calculate_gradient([df1, df2], smooth=smooth)
 
     plotting_sensitivity(
         [df1, df2.set_index('I')], 
