@@ -470,6 +470,16 @@ def display_info(x0_bounds, info=''):
         '''
     )
 
+def runtime_info(st_container, start_time, info):
+    st_container.markdown(
+        f"""
+        <p style="font-size:13px; opacity:0.6;"> 
+            Run time {info}: {time.time() - start_time:.3f} s
+        </p>
+        """, 
+        unsafe_allow_html=True
+    )
+
 def settings_popover(var, defaults):
     """Display a Streamlit popover with settings for sensitivity analysis optimization.
 
@@ -580,7 +590,7 @@ def tab_e_total_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_sae', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
     
     e_total = np.arange(var_range[0], var_range[1]+0.0001, step_size)
@@ -591,7 +601,7 @@ def tab_e_total_sa():
     }
  
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'e')
         results = {
@@ -616,14 +626,7 @@ def tab_e_total_sa():
         }
         df1, df2, df3 = results_to_df(results, e_total, 'ε_t', fix=cuttoff_outliers)
     
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
 
     plotting_sensitivity(
@@ -666,7 +669,7 @@ def tab_c_total_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_sac', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
     
     c_total = np.arange(var_range[0], var_range[1]+0.0001, step_size)
@@ -677,7 +680,7 @@ def tab_c_total_sa():
     }
     
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'c')
         results = {
@@ -702,14 +705,7 @@ def tab_c_total_sa():
         }
         df1, df2, df3 = results_to_df(results, c_total, 'c_t', fix=cuttoff_outliers)
 
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
 
     plotting_sensitivity(
@@ -748,7 +744,7 @@ def tab_q0_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_saq', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
 
     q0 = np.arange(var_range[0], var_range[1]+0.0001, step_size)
@@ -759,7 +755,7 @@ def tab_q0_sa():
     }
 
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'q')
         results = {
@@ -784,14 +780,7 @@ def tab_q0_sa():
         }
         df1, df2, df3 = results_to_df(results, q0, 'q0', fix=cuttoff_outliers)
 
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
 
     plotting_sensitivity(
@@ -833,7 +822,7 @@ def tab_ts_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_sat', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
 
     t_s = np.arange(var_range[0], var_range[1]+0.0001, step_size)
@@ -845,7 +834,7 @@ def tab_ts_sa():
 
     
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 't')
         results = {
@@ -870,14 +859,7 @@ def tab_ts_sa():
         }
         df1, df2, df3 = results_to_df(results, t_s, 't_s', fix=cuttoff_outliers)
 
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
 
     plotting_sensitivity(
@@ -915,7 +897,7 @@ def tab_i_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_sai', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
 
     I = np.arange(var_range[0], var_range[1]+step_size, step_size)
@@ -924,7 +906,7 @@ def tab_i_sa():
     }
 
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'I')
         results = {
@@ -937,14 +919,7 @@ def tab_i_sa():
         }
         df1,  = results_to_df(results, I, 'I', fix=cuttoff_outliers)
 
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
 
     plotting_sensitivity(
@@ -984,7 +959,7 @@ def tab_s_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_sas', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
 
     s = np.arange(var_range[0], var_range[1]+0.0001, step_size)
@@ -993,7 +968,7 @@ def tab_s_sa():
     }
 
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 's')
         results = {
@@ -1006,14 +981,7 @@ def tab_s_sa():
         }
         df1,  = results_to_df(results, s, 's', fix=cuttoff_outliers)
 
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
 
     plotting_sensitivity(
