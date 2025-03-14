@@ -987,7 +987,6 @@ def sensitivity_analysis():
     init_session_state(DEFAULT_SA_SLIDERS)
 
     st.info(r'Choose a variable/parameter to analyze its impact on the minimum power consumption $min(w)$')
-    st.warning('updating...')
     tab_e, tab_c, tab_q, tab_t, tab_ir = st.tabs(
         [
         r'$\varepsilon_{total}$', '$c_{total}$', 
