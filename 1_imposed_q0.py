@@ -3,7 +3,10 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.io as pio
+
+from scipy.signal import savgol_filter
 from streamlit_theme import st_theme
+
 from util.calc_imposed_q0 import find_minimum, find_minimum_vectorized
 from util.calc_imposed_q0 import objective_function, objective_function_ir_ratio, objective_function_ep_rate
 from util.plot import plotting3D, plotting_sensitivity
@@ -29,21 +32,21 @@ else:
 MULTIPLIER = 10**4
 POWER_OF_10 = np.log10(MULTIPLIER)
 DEFAULT_VALUES_EPS = {
-    'e_t_e': 2.0,
-    'c_g_e': 0.2,
-    'c_p_e': 0.2,
-    'q0_e': 10.0,
+    'e_t_e': 2.4,
+    'c_g_e': 0.4,
+    'c_p_e': 0.4,
+    'q0_e': 20.0,
     't_s_e': 0.9,
-    'I_e': 1.01,
+    'I_e': 1.05,
     # 's_e': 0.1
 }
 DEFAULT_VALUES_C = {
-    'e_g_c': 0.5,
-    'e_p_c': 0.5,
+    'e_g_c': 0.6,
+    'e_p_c': 0.6,
     'c_t_c': 0.8,
-    'q0_c': 10.0,
+    'q0_c': 20.0,
     't_s_c': 0.9,
-    'I_c': 1.01,
+    'I_c': 1.05,
     # 's_c': 0.1
 }
 
@@ -122,18 +125,18 @@ def tab_eps_total_plane():
             r'$\varepsilon_{total}:$', 'e_t_e', 
             0.4, 4.0, 0.1, fmt="%.1f"
         )
-        init_c_g = init_slider('$c_{g}:$', 'c_g_e', 0.05, 0.5, 0.01)
-        init_c_p = init_slider('$c_{p}:$', 'c_p_e', 0.05, 0.5, 0.01)
+        init_c_g = init_slider('$c_{g}:$', 'c_g_e', 0.01, 1.0, 0.01)
+        init_c_p = init_slider('$c_{p}:$', 'c_p_e', 0.01, 1.0, 0.01)
         init_q = init_slider(
-            '$q_{0}:$', 'q0_e', 1.0, 50.0, 0.1, fmt="%.1f",
+            '$q_{0}:$', 'q0_e', 1.0, 100.0, 0.1, fmt="%.1f",
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
         init_t_s = init_slider('$t_{s}:$', 't_s_e', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'I_e', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'I_e', 1.0, 2.0, 0.01)
         
         s_value = ((init_I-1)*init_q/MULTIPLIER)/(init_t_s - (2*init_q/(MULTIPLIER*(init_c_g+init_c_p)))*(8/init_eps_total - 1))*MULTIPLIER
         init_s = init_slider(
-            '$s:$', 's_e', 0.1, 50.0, 0.01, value=s_value,
+            '$s:$', 's_e', 0.0, 100.0, 0.01, value=s_value,
             help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}},\quad s=f(I, q_{{0}}, t_s, \varepsilon, c) $'
         )
 
@@ -171,7 +174,7 @@ def tab_eps_total_plane():
         }, 
         index=['reversibility', 'irreversibility ratio', 'entropy production rate']
     )
-    st.dataframe(df)
+    st.dataframe(df, width=640)
 
 @st.fragment
 def tab_c_total_plane():
@@ -180,19 +183,19 @@ def tab_c_total_plane():
 
     #=====SLIDERS=====
     with col_control:
-        init_c_total = init_slider('$c_{total}:$', 'c_t_c', 0.1, 1.0, 0.01)
-        init_e_g = init_slider(r'$\varepsilon_{g}:$', 'e_g_c', 0.1, 1.0, 0.01)
-        init_e_p = init_slider(r'$\varepsilon_{p}:$', 'e_p_c', 0.1, 1.0, 0.01)
+        init_c_total = init_slider('$c_{total}:$', 'c_t_c', 0.01, 1.0, 0.01)
+        init_e_g = init_slider(r'$\varepsilon_{g}:$', 'e_g_c', 0.01, 1.0, 0.01)
+        init_e_p = init_slider(r'$\varepsilon_{p}:$', 'e_p_c', 0.01, 1.0, 0.01)
         init_q = init_slider(
-            '$q_{0}:$', 'q0_c', 1.0, 50.0, 0.1, fmt="%.1f",
+            '$q_{0}:$', 'q0_c', 1.0, 100.0, 0.1, fmt="%.1f",
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
         init_t_s = init_slider('$t_{s}:$', 't_s_c', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'I_c', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'I_c', 1.0, 2.0, 0.01)
         
         s_value = ((init_I-1)*init_q/MULTIPLIER)/(init_t_s - (2*init_q/(MULTIPLIER*init_c_total))*(8/(init_e_g+init_e_p) - 1))*MULTIPLIER
         init_s = init_slider(
-            '$s:$', 's_c', 0.1, 50.0, 0.01, value=s_value,
+            '$s:$', 's_c', 0.0, 100.0, 0.01, value=s_value,
             help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}},\quad s=f(I, q_{{0}}, t_s, \varepsilon, c) $'
         )
 
@@ -230,7 +233,7 @@ def tab_c_total_plane():
         }, 
         index=['reversibility', 'irreversibility ratio', 'entropy production rate']
     )
-    st.dataframe(df)
+    st.dataframe(df, width=520)
 
 
 #============MAIN CALCULATION==============
@@ -265,7 +268,10 @@ DEFAULT_SETTING_GLOBAL = {
     'c_0': 0.1,
     'c_bnds': (0.0, 1.0),
     'warm_start': True,
-    'cut_off': True
+    'cut_off': True,
+    'smooth': False,
+    'plot_sens': True,
+    'plot_param': 'Hot loop'
 }
 DEFAULT_SETTING_VALUES = {
     'e': {
@@ -282,8 +288,9 @@ DEFAULT_SETTING_VALUES = {
         'step': 0.02,
         'step_widget': (0.005, 0.1, 0.005),
         'range': (0.4, 1.0),
-        'range_widget': (0.2, 1.0),
-        **DEFAULT_SETTING_GLOBAL
+        'range_widget': (0.1, 1.0),
+        **DEFAULT_SETTING_GLOBAL,
+        'tol': -21,
     },
 
     'q': {
@@ -292,7 +299,8 @@ DEFAULT_SETTING_VALUES = {
         'step_widget': (0.05, 5.0, 0.05),
         'range': (10.0, 80.0), 
         'range_widget': (0.0, 100.0),
-        **DEFAULT_SETTING_GLOBAL
+        **DEFAULT_SETTING_GLOBAL,
+        'tol': -21,
     },
     
     't': {
@@ -301,7 +309,8 @@ DEFAULT_SETTING_VALUES = {
         'step_widget': (0.001, 0.02, 0.001),
         'range': (0.85, 0.95),
         'range_widget': (0.8, 1.0),
-        **DEFAULT_SETTING_GLOBAL
+        **DEFAULT_SETTING_GLOBAL,
+        'tol': -21,
     },
 
     'I': {
@@ -325,52 +334,52 @@ DEFAULT_SETTING_VALUES = {
 DEFAULT_SA_SLIDERS = {
     'e': {
         'e_t': (2.0, 4.0),
-        'c_t': 0.7,
-        'q0': 30.0,
+        'c_t': 0.8,
+        'q0': 50.0,
         't_s': 0.9,
         'I': 1.1,
-        's': 3.0
+        # 's': 3.0
     },
 
     'c': {
-        'e_t': 2.0,
+        'e_t': 3.2,
         'c_t': (0.4, 1.0),
-        'q0': 30.0,
+        'q0': 50.0,
         't_s': 0.9,
         'I': 1.1,
-        's': 3.0
+        # 's': 3.0
     },
 
     'q': {
-        'e_t': 2.0,
-        'c_t': 0.5,
+        'e_t': 3.2,
+        'c_t': 0.8,
         'q0': (10.0, 80.0),
         't_s': 0.9,
         'I': 1.1,
-        's': 3.0
+        # 's': 3.0
     },
 
     't': {
-        'e_t': 2.0,
-        'c_t': 0.5,
-        'q0': 30.0,
+        'e_t': 3.2,
+        'c_t': 0.8,
+        'q0': 50.0,
         't_s': (0.85, 0.95),
         'I': 1.1,
-        's': 3.0
+        # 's': 3.0
     },
     
     'I': {
-        'e_t': 2.0,
-        'c_t': 0.5,
-        'q0': 30.0,
+        'e_t': 3.2,
+        'c_t': 0.8,
+        'q0': 50.0,
         't_s': 0.9,
         'I': (1.0, 2.0),
     },
 
     's': {
-        'e_t': 2.0,
-        'c_t': 0.5,
-        'q0': 30.0,
+        'e_t': 3.2,
+        'c_t': 0.8,
+        'q0': 50.0,
         't_s': 0.9,
         's': (0.0, 25.0)
     }
@@ -392,7 +401,7 @@ def results_to_df(results, param, param_name, fix=True):
     columns = [param_name, 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
     
     for key, result_list in results.items():
-        if key=='ep':
+        if key=='ep':   # results['ep'] = [result, s_array] 
             df = pd.DataFrame.from_records(
                     [(p, r.fun * MULTIPLIER, *r.x) for p, r in zip(param, result_list[0])],
                     columns=columns
@@ -441,13 +450,17 @@ def display_results(dfs):
         with col3:
             st.write("Entropy production rate:")
             st.dataframe(df3, height=height)
-    else:
-        df = dfs[0]
-        text = 'Irreversibility ratio' if df.index.name == 'I' else 'Entropy production rate'
-        st.write(f"{text}:")
-        st.dataframe(df, height=height) 
+    elif len(dfs) == 2:
+        df1, df2 = dfs
+        col1, col2, _ = st.columns((1, 1, 1))
+        with col1:
+            st.write("Irreversibility ratio:")
+            st.dataframe(df1, height=height)
+        with col2:
+            st.write("Entropy production rate:")
+            st.dataframe(df2, height=height)
 
-def display_info(x0_bounds, info=''):
+def display_info(x0_bounds, info, plot_param):
     """
     Displays optimization information.
 
@@ -466,8 +479,20 @@ def display_info(x0_bounds, info=''):
 
         Initial guesses {info}: $\quad \varepsilon^*_{{i,0}} = $`{e_0:.2f}`; $\,\, c^*_{{i,0}} = $`{c_0:.2f}`  
         Bounds: $\quad \varepsilon^*_{{i}} \in [$`{e_min}, {e_max}`$]$;
-        $\,\, c^*_{{i}} \in [$`{c_min}, {c_max}`$]$  
+        $\,\, c^*_{{i}} \in [$`{c_min}, {c_max}`$]$ 
+
+        Plots with respect to `{plot_param}`
         '''
+    )
+
+def runtime_info(st_container, start_time, info):
+    st_container.markdown(
+        f"""
+        <p style="font-size:13px; opacity:0.6;"> 
+            Run time {info}: {time.time() - start_time:.3f} s
+        </p>
+        """, 
+        unsafe_allow_html=True
     )
 
 def settings_popover(var, defaults):
@@ -546,9 +571,36 @@ def settings_popover(var, defaults):
             help='Use previous results as initial guess for next iteration'
         )
         cuttoff_outliers = st.toggle("Outliers to `None`", key=f'{var}_cut_off')
+        smooth = st.toggle("Smooth results", key=f'{var}_smooth')
+
+        st.divider()
+        plot_sens = st.toggle("Plot sensitivity", key=f'{var}_plot_sens')
+        plot_param = st.radio(
+            'Plots w.r.t.:', ['Hot loop', 'Cold loop'], index=0, 
+            horizontal=True,
+            key=f'{var}_plot_param'
+        )
 
 
-        return step_size, var_range, opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers
+        return (step_size, var_range, opt_method, tolerance, 
+                guess_bound, warm_start, cuttoff_outliers, 
+                smooth, plot_sens, plot_param
+        )
+    
+def calculate_gradient(dfs, smooth=False):  
+    
+    columns = [col for col in dfs[0].columns if not (col.endswith('ev') or col.endswith('cd'))]
+    window_length = len(dfs[0]) 
+    polyorder = 1               # linear fit
+
+    for df in dfs:
+        M1 = MULTIPLIER if df.index.name=='q0' or df.index.name=='s' else 1
+        for col in columns:
+            M2 = MULTIPLIER if col=='minw' else 1
+            if smooth and col!='minw':
+                df[col] = savgol_filter(df[col].values, window_length, polyorder)
+
+            df[f"grad_{col}"] = np.gradient(df[col]/M2, df.index/M1)
 
 @st.fragment
 def tab_e_total_sa():
@@ -557,10 +609,12 @@ def tab_e_total_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('e', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
         
-        display_info(guess_bound, info=txt)
+        display_info(guess_bound, txt, plot_param)
+
 
     with col_control:
         # sliders
@@ -570,7 +624,7 @@ def tab_e_total_sa():
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
         init_t_s = init_slider('$t_{s}:$', 'e_t_s', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'e_I', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'e_I', 1.0, 2.0, 0.01)
         # init_s = init_slider(
         #     '$s:$', 'e_s', 0.1, 20.0, 0.01,
         #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
@@ -580,7 +634,7 @@ def tab_e_total_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_sae', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
     
     e_total = np.arange(var_range[0], var_range[1]+0.0001, step_size)
@@ -591,7 +645,7 @@ def tab_e_total_sa():
     }
  
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'e')
         results = {
@@ -616,19 +670,16 @@ def tab_e_total_sa():
         }
         df1, df2, df3 = results_to_df(results, e_total, 'ε_t', fix=cuttoff_outliers)
     
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
+
+    calculate_gradient([df1, df2, df3], smooth=smooth)
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
+        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
+        plot_sens,                                                      # plot sensitivity (True or False)
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
@@ -642,10 +693,11 @@ def tab_c_total_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('c', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
-        
-        display_info(guess_bound, info=txt)
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
+
+        display_info(guess_bound, txt, plot_param)
 
 
     with col_control:
@@ -656,7 +708,7 @@ def tab_c_total_sa():
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
         init_t_s = init_slider('$t_{s}:$', 'c_t_s', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'c_I', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'c_I', 1.0, 2.0, 0.01)
         # init_s = init_slider(
         #     '$s:$', 'c_s', 0.1, 30.0, 0.01,
         #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
@@ -666,7 +718,7 @@ def tab_c_total_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_sac', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
     
     c_total = np.arange(var_range[0], var_range[1]+0.0001, step_size)
@@ -677,7 +729,7 @@ def tab_c_total_sa():
     }
     
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'c')
         results = {
@@ -702,19 +754,15 @@ def tab_c_total_sa():
         }
         df1, df2, df3 = results_to_df(results, c_total, 'c_t', fix=cuttoff_outliers)
 
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
+    calculate_gradient([df1, df2, df3], smooth=smooth)
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
+        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
+        plot_sens,                                                      # plot sensitivity (True or False)
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
@@ -728,17 +776,19 @@ def tab_q0_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('q', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
-        
-        display_info(guess_bound, info=txt)
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
+
+        display_info(guess_bound, txt, plot_param)
     
+
     with col_control:
         # sliders
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'q_e_t', 0.4, 4.0, 0.01)
         init_c_t = init_slider('$c_{total}:$', 'q_c_t', 0.1, 1.0, 0.01)
         init_t_s = init_slider('$t_{s}:$', 'q_t_s', 0.8, 1.0, 0.01)
-        init_I = init_slider('$I:$', 'q_I', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 'q_I', 1.0, 2.0, 0.01)
         # init_s = init_slider(
         #     '$s:$', 'q_s', 0.1, 30.0, 0.01,
         #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
@@ -748,7 +798,7 @@ def tab_q0_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_saq', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
 
     q0 = np.arange(var_range[0], var_range[1]+0.0001, step_size)
@@ -759,7 +809,7 @@ def tab_q0_sa():
     }
 
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 'q')
         results = {
@@ -784,19 +834,15 @@ def tab_q0_sa():
         }
         df1, df2, df3 = results_to_df(results, q0, 'q0', fix=cuttoff_outliers)
 
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
+    calculate_gradient([df1, df2, df3], smooth=smooth)
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
+        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
+        plot_sens,                                                      # plot sensitivity (True or False)
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
@@ -810,10 +856,12 @@ def tab_ts_sa():
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('t', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
         
-        display_info(guess_bound, info=txt)
+        display_info(guess_bound, txt, plot_param)
+
 
     with col_control:
         # sliders
@@ -823,7 +871,7 @@ def tab_ts_sa():
             '$q_{0}:$', 't_q0', 1.0, 100.0, 0.1, fmt="%.1f",
             help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
         )
-        init_I = init_slider('$I:$', 't_I', 1.0, 3.0, 0.01)
+        init_I = init_slider('$I:$', 't_I', 1.0, 2.0, 0.01)
         # init_s = init_slider(
         #     '$s:$', 't_s', 0.1, 30.0, 0.01,
         #     help=fr'$s \times 10^{{-{POWER_OF_10:.0f}}}$'
@@ -833,7 +881,7 @@ def tab_ts_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_sat', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
 
     t_s = np.arange(var_range[0], var_range[1]+0.0001, step_size)
@@ -845,7 +893,7 @@ def tab_ts_sa():
 
     
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
         opt_config = ('sa', 't')
         results = {
@@ -870,19 +918,15 @@ def tab_ts_sa():
         }
         df1, df2, df3 = results_to_df(results, t_s, 't_s', fix=cuttoff_outliers)
 
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
+    calculate_gradient([df1, df2, df3], smooth=smooth)
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'], 
+        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
+        plot_sens,                                                      # plot sensitivity (True or False)
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
@@ -890,17 +934,19 @@ def tab_ts_sa():
     display_results([df1, df2, df3])
 
 @st.fragment
-def tab_i_sa():
+def tab_ir_sa():
     col_control, _, col_info = st.columns((0.34, 0.02, 0.64))
     
     with col_info:
         # settings
         step_size, var_range, *opt_settings = settings_popover('I', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
+        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, smooth, plot_sens, plot_param = opt_settings
         txt = f'(warm starting*)' if warm_start else ''
-        
-        display_info(guess_bound, info=txt)
+        param_index = 'p' if plot_param=='Hot loop' else 'g'
+
+        display_info(guess_bound, txt, plot_param)
     
+
     with col_control:
         # sliders
         init_eps_t = init_slider(r'$\varepsilon_{total}:$', 'I_e_t', 0.4, 4.0, 0.01)
@@ -915,115 +961,52 @@ def tab_i_sa():
             "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
             key='btn_sai', help='Reset Parameters to Defaults'
         )
-        runtime_info = st.empty()
+        st_runtime_info = st.empty()
 
 
     I = np.arange(var_range[0], var_range[1]+step_size, step_size)
     initial_params = {
         'ir': [init_eps_t, init_c_t, init_q, init_t_s, MULTIPLIER],
-    }
-
-    # Perform optimization
-    start = time.time()
-    with st.spinner("Calculating..."):
-        opt_config = ('sa', 'I')
-        results = {
-            'ir': find_minimum_vectorized(
-                objective_function_ir_ratio, I, opt_config,
-                guess_bound, *initial_params['ir'],
-                method=opt_method, tol=tolerance,
-                warm_start=warm_start
-                ),
-        }
-        df1,  = results_to_df(results, I, 'I', fix=cuttoff_outliers)
-
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
-
-
-    plotting_sensitivity(
-        [df1], 
-        ['irrevers. ratio'], 
-        POWER_OF_10,
-        theme_session
-    )
-
-    display_results([df1])
-
-@st.fragment
-def tab_s_sa():
-    col_control, _, col_info = st.columns((0.34, 0.02, 0.64))
-    
-    with col_info:
-        # settings
-        step_size, var_range, *opt_settings = settings_popover('s', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
-        txt = f'(warm starting*)' if warm_start else ''
-        
-        display_info(guess_bound, info=txt)
-
-        st.warning('updating...')
-    
-    with col_control:
-        # sliders
-        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 's_e_t', 0.4, 4.0, 0.01)
-        init_c_t = init_slider('$c_{total}:$', 's_c_t', 0.1, 1.0, 0.01)
-        init_q = init_slider(
-            '$q_{0}:$', 's_q0', 1.0, 100.0, 0.1, fmt="%.1f",
-            help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
-        )
-        init_t_s = init_slider('$t_{s}:$', 's_t_s', 0.8, 1.0, 0.01)
-
-        st.button(
-            "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
-            key='btn_sas', help='Reset Parameters to Defaults'
-        )
-        runtime_info = st.empty()
-
-
-    s = np.arange(var_range[0], var_range[1]+0.0001, step_size)
-    initial_params = {
         'ep': [init_eps_t, init_c_t, init_q, init_t_s, MULTIPLIER],
     }
 
     # Perform optimization
-    start = time.time()
+    start_time = time.time()
     with st.spinner("Calculating..."):
-        opt_config = ('sa', 's')
+        opt_config = [('sa', 'I'), ('sa', 's')]
         results = {
+            'ir': find_minimum_vectorized(
+                objective_function_ir_ratio, I, opt_config[0],
+                guess_bound, *initial_params['ir'],
+                method=opt_method, tol=tolerance,
+                warm_start=warm_start
+                ),
             'ep': find_minimum_vectorized(
-                objective_function_ep_rate, s, opt_config,
+                objective_function_ep_rate, I, opt_config[1],
                 guess_bound, *initial_params['ep'],
                 method=opt_method, tol=tolerance,
                 warm_start=warm_start
                 ),
         }
-        df1,  = results_to_df(results, s, 's', fix=cuttoff_outliers)
+        
+        df1, df2 = results_to_df(results, I, 'I', fix=cuttoff_outliers)
+        df2 = df2.reset_index().set_index('s')
 
-    runtime_info.markdown(
-        f"""
-        <p style="font-size:13px; opacity:0.6;"> 
-            Run time {txt}: {time.time() - start:.3f} s
-        </p>
-        """, 
-        unsafe_allow_html=True
-    )
+    runtime_info(st_runtime_info, start_time, txt)
 
+
+    calculate_gradient([df1, df2], smooth=smooth)
 
     plotting_sensitivity(
-        [df1], 
-        ['entropy prod. rate'], 
+        [df1, df2.set_index('I')], 
+        ['irrevers. ratio', 'entropy prod. rate'],                      # labels
+        plot_sens,                                                      # plot sensitivity (True or False)
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
 
-    display_results([df1])
+    display_results([df1, df2])
 
 @st.fragment
 def sensitivity_analysis():
@@ -1031,14 +1014,12 @@ def sensitivity_analysis():
     init_session_state(DEFAULT_SA_SLIDERS)
 
     st.info(r'Choose a variable/parameter to analyze its impact on the minimum power consumption $min(w)$')
-    st.warning('updating...')
-    tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs(
+    tab_e, tab_c, tab_q, tab_t, tab_ir = st.tabs(
         [
         r'$\varepsilon_{total}$', '$c_{total}$', 
         '&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
         '&nbsp;&nbsp;&nbsp;&nbsp;$t_s$&nbsp;&nbsp;&nbsp;&nbsp;', 
-        '&nbsp;&nbsp;&nbsp;&nbsp;$I$&nbsp;&nbsp;&nbsp;&nbsp;', 
-        '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'
+        '&nbsp;&nbsp;&nbsp;$I\ \&\ s$&nbsp;&nbsp;&nbsp;', 
         ]
     )
 
@@ -1083,25 +1064,16 @@ def sensitivity_analysis():
         st.write('')
         tab_ts_sa()
 
-    with tab_i:
+    with tab_ir:
         st.markdown(
             r'''
-            Minimum power consumption $\min(w)$ as a function of $I$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
-            Parameter $I$ is for the irreversibility ratio.
+            Minimum power consumption $\min(w)$ as a function of parameters $I$ and $s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
+            Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
             '''
         )
         st.write('')
-        tab_i_sa()
+        tab_ir_sa()
 
-    with tab_s:
-        st.markdown(
-            r'''
-            Minimum power consumption $\min(w)$ as a function of $s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
-            Parameter $s$ is for the entropy production rate.
-            '''
-        )
-        st.write('')
-        tab_s_sa()
 
 
 #==============SENSITIVITY ANALYSIS==============
