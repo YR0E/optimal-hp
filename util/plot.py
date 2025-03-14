@@ -220,7 +220,7 @@ def plotting3D(res, initial_params, opt_var):
 
 
 
-def plotting_sensitivity(data, labels, param_index, power, theme_session):
+def plotting_sensitivity(data, labels, plot_sens, param_index, power, theme_session):
     """
     Plots sensitivity analysis of optimization results and optima.
 
@@ -271,10 +271,16 @@ def plotting_sensitivity(data, labels, param_index, power, theme_session):
         dash_cycle = dash_cycle[1:]
 
 
-    fig = make_subplots(
-        rows=2, cols=3,
-        horizontal_spacing=0.075,
-    )
+    if plot_sens:
+        fig = make_subplots(
+            rows=2, cols=3,
+            horizontal_spacing=0.075,
+        )
+    else:
+        fig = make_subplots(
+            rows=1, cols=3,
+            horizontal_spacing=0.075,
+        )
 
     for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
         fig.add_trace(go.Scatter(
@@ -287,16 +293,6 @@ def plotting_sensitivity(data, labels, param_index, power, theme_session):
             row=1, col=1
         )
     
-    for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
-        fig.add_trace(go.Scatter(
-            x=df.index, y=df['grad_minw'],
-            mode='lines',
-            line=dict(color=color, dash=dash),
-            name=label, legendgroup=label,
-            showlegend=False,
-            ), 
-            row=2, col=1
-        )
 
     for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
         fig.add_trace(go.Scatter(
@@ -311,17 +307,6 @@ def plotting_sensitivity(data, labels, param_index, power, theme_session):
 
     for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
         fig.add_trace(go.Scatter(
-            x=df.index, y=df[f'grad_ε*_{param_index}'],
-            mode='lines',
-            line=dict(color=color, dash=dash),
-            name=label, legendgroup=label, 
-            showlegend=False,
-            ), 
-            row=2, col=2
-        )
-    
-    for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
-        fig.add_trace(go.Scatter(
             x=df.index, y=df[f'c*_{param_index}'],
             mode='lines',
             line=dict(color=color, dash=dash),
@@ -331,16 +316,6 @@ def plotting_sensitivity(data, labels, param_index, power, theme_session):
             row=1, col=3
         )
 
-    for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
-        fig.add_trace(go.Scatter(
-            x=df.index, y=df[f'grad_c*_{param_index}'],
-            mode='lines',
-            line=dict(color=color, dash=dash),
-            name=label, legendgroup=label, 
-            showlegend=False,
-            ), 
-            row=2, col=3
-        )
 
     
     fig.update_layout(
@@ -354,23 +329,7 @@ def plotting_sensitivity(data, labels, param_index, power, theme_session):
         ),
 
         autosize=True,
-        height=500,
         margin=dict(l=5, r=5, b=80, t=10),
-        xaxis4=dict(
-            title=x_title,
-            title_font=DEFAULT_FONT,
-            title_standoff=18
-        ),
-        xaxis5=dict(
-            title=x_title,
-            title_font=DEFAULT_FONT,
-            title_standoff=18,
-        ),
-        xaxis6=dict(
-            title=x_title,
-            title_font=DEFAULT_FONT,
-            title_standoff=18,
-        ),
 
         yaxis=dict(
             title=ytitles[0],
@@ -387,21 +346,6 @@ def plotting_sensitivity(data, labels, param_index, power, theme_session):
             title_font=DEFAULT_FONT,
             title_standoff=18
         ),
-        yaxis4=dict(
-            title=ytitles[3],
-            title_font=DEFAULT_FONT,
-            title_standoff=18
-        ),
-        yaxis5=dict(
-            title=ytitles[4],
-            title_font=DEFAULT_FONT,
-            title_standoff=18
-        ),
-        yaxis6=dict(
-            title=ytitles[5],
-            title_font=DEFAULT_FONT,
-            title_standoff=18
-        ),
 
         legend=dict(
             yanchor="top", y=1.1,
@@ -412,6 +356,97 @@ def plotting_sensitivity(data, labels, param_index, power, theme_session):
         hovermode='x',
     )
 
+    if not plot_sens:
+        fig.update_layout(
+            xaxis=dict(
+                title=x_title,
+                title_font=DEFAULT_FONT,
+                title_standoff=18
+            ),
+            xaxis2=dict(
+                title=x_title,
+                title_font=DEFAULT_FONT,
+                title_standoff=18,
+            ),
+            xaxis3=dict(
+                title=x_title,
+                title_font=DEFAULT_FONT,
+                title_standoff=18,
+            ),
+        )
+
     fig.update_xaxes(matches='x')
+
+
+    if plot_sens:
+        for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
+            fig.add_trace(go.Scatter(
+                x=df.index, y=df['grad_minw'],
+                mode='lines',
+                line=dict(color=color, dash=dash),
+                name=label, legendgroup=label,
+                showlegend=False,
+                ), 
+                row=2, col=1
+            )
+
+        for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
+            fig.add_trace(go.Scatter(
+                x=df.index, y=df[f'grad_ε*_{param_index}'],
+                mode='lines',
+                line=dict(color=color, dash=dash),
+                name=label, legendgroup=label, 
+                showlegend=False,
+                ), 
+                row=2, col=2
+            )
+        
+
+        for df, label, color, dash in zip(data, labels, color_cycle, dash_cycle):
+            fig.add_trace(go.Scatter(
+                x=df.index, y=df[f'grad_c*_{param_index}'],
+                mode='lines',
+                line=dict(color=color, dash=dash),
+                name=label, legendgroup=label, 
+                showlegend=False,
+                ), 
+                row=2, col=3
+            )
+
+        fig.update_layout(
+            height=500,
+
+            xaxis4=dict(
+                title=x_title,
+                title_font=DEFAULT_FONT,
+                title_standoff=18
+            ),
+            xaxis5=dict(
+                title=x_title,
+                title_font=DEFAULT_FONT,
+                title_standoff=18,
+            ),
+            xaxis6=dict(
+                title=x_title,
+                title_font=DEFAULT_FONT,
+                title_standoff=18,
+            ),
+            yaxis4=dict(
+                title=ytitles[3],
+                title_font=DEFAULT_FONT,
+                title_standoff=18
+            ),
+            yaxis5=dict(
+                title=ytitles[4],
+                title_font=DEFAULT_FONT,
+                title_standoff=18
+            ),
+            yaxis6=dict(
+                title=ytitles[5],
+                title_font=DEFAULT_FONT,
+                title_standoff=18
+            ),
+        )
+
 
     st.plotly_chart(fig, use_container_width=True, config=config, theme=theme_session)
