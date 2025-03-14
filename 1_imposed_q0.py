@@ -284,7 +284,8 @@ DEFAULT_SETTING_VALUES = {
         'step_widget': (0.005, 0.1, 0.005),
         'range': (0.4, 1.0),
         'range_widget': (0.1, 1.0),
-        **DEFAULT_SETTING_GLOBAL
+        **DEFAULT_SETTING_GLOBAL,
+        'tol': -21,
     },
 
     'q': {
@@ -293,7 +294,8 @@ DEFAULT_SETTING_VALUES = {
         'step_widget': (0.05, 5.0, 0.05),
         'range': (10.0, 80.0), 
         'range_widget': (0.0, 100.0),
-        **DEFAULT_SETTING_GLOBAL
+        **DEFAULT_SETTING_GLOBAL,
+        'tol': -21,
     },
     
     't': {
@@ -302,7 +304,8 @@ DEFAULT_SETTING_VALUES = {
         'step_widget': (0.001, 0.02, 0.001),
         'range': (0.85, 0.95),
         'range_widget': (0.8, 1.0),
-        **DEFAULT_SETTING_GLOBAL
+        **DEFAULT_SETTING_GLOBAL,
+        'tol': -21,
     },
 
     'I': {
@@ -567,6 +570,16 @@ def settings_popover(var, defaults):
 
         return step_size, var_range, opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers, plot_param
 
+def calculate_gradient(dfs):  
+    
+    columns = [col for col in dfs[0].columns if not (col.endswith('ev') or col.endswith('cd'))]
+
+    for df in dfs:
+        M1 = MULTIPLIER if df.index.name=='q0' or df.index.name=='s' else 1
+        for col in columns:
+            M2 = MULTIPLIER if col=='minw' else 1
+            df[f"grad_{col}"] = np.gradient(df[col]/M2, df.index/M1)
+
 @st.fragment
 def tab_e_total_sa():
     col_control, _, col_info = st.columns((0.34, 0.02, 0.64))
@@ -638,10 +651,12 @@ def tab_e_total_sa():
     runtime_info(st_runtime_info, start_time, txt)
 
 
+    calculate_gradient([df1, df2, df3])
+
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
         ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
@@ -718,11 +733,12 @@ def tab_c_total_sa():
 
     runtime_info(st_runtime_info, start_time, txt)
 
+    calculate_gradient([df1, df2, df3])
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
         ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
@@ -796,11 +812,12 @@ def tab_q0_sa():
 
     runtime_info(st_runtime_info, start_time, txt)
 
+    calculate_gradient([df1, df2, df3])
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
         ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
@@ -878,11 +895,12 @@ def tab_ts_sa():
 
     runtime_info(st_runtime_info, start_time, txt)
 
+    calculate_gradient([df1, df2, df3])
 
     plotting_sensitivity(
         [df1, df2, df3], 
-        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
-        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels 
+        ['reversibility', 'irrevers. ratio', 'entropy prod. rate'],     # labels
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
@@ -946,19 +964,21 @@ def tab_ir_sa():
         }
         
         df1, df2 = results_to_df(results, I, 'I', fix=cuttoff_outliers)
+        df2 = df2.reset_index().set_index('s')
 
     runtime_info(st_runtime_info, start_time, txt)
 
 
+    calculate_gradient([df1, df2])
+
     plotting_sensitivity(
-        [df1, df2], 
-        ['minw', f'ε*_{param_index}', f'c*_{param_index}'],             # params
+        [df1, df2.set_index('I')], 
         ['irrevers. ratio', 'entropy prod. rate'],                      # labels
+        param_index,                                                    # parameter index (e.g. 'p' for hot loop)
         POWER_OF_10,
         theme_session
     )
 
-    df2 = df2.reset_index().set_index('s')
     display_results([df1, df2])
 
 @st.fragment
