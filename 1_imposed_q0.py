@@ -941,7 +941,7 @@ def tab_ir_sa():
         theme_session
     )
 
-    df2 = df2.set_index('s')
+    df2 = df2.reset_index().set_index('s')
     display_results([df1, df2])
 
 @st.fragment

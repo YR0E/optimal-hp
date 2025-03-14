@@ -236,8 +236,11 @@ def plotting_sensitivity(data, labels, power, theme_session):
         horizontal_spacing=0.075,
     )
 
-    color_cycle = DEFAULT_PLOTLY_COLORS[:len(labels)]  # Get as many colors as labels
+    color_cycle = DEFAULT_PLOTLY_COLORS[:3]  # Get as many colors for 3 labels
     dash_cycle = ['5px', 'solid', 'solid']
+    if len(labels)==2:
+        color_cycle = color_cycle[1:]
+        dash_cycle = dash_cycle[1:]
 
     # Set the configuration for the Plotly chart, including the resolution settings
     config = {
