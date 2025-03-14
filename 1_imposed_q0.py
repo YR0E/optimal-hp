@@ -392,7 +392,7 @@ def results_to_df(results, param, param_name, fix=True):
     columns = [param_name, 'minw', 'ε*_g', 'ε*_p', 'ε*_ev', 'ε*_cd', 'c*_g', 'c*_p']
     
     for key, result_list in results.items():
-        if key=='ep':
+        if key=='ep':   # results['ep'] = [result, s_array] 
             df = pd.DataFrame.from_records(
                     [(p, r.fun * MULTIPLIER, *r.x) for p, r in zip(param, result_list[0])],
                     columns=columns
@@ -441,11 +441,15 @@ def display_results(dfs):
         with col3:
             st.write("Entropy production rate:")
             st.dataframe(df3, height=height)
-    else:
-        df = dfs[0]
-        text = 'Irreversibility ratio' if df.index.name == 'I' else 'Entropy production rate'
-        st.write(f"{text}:")
-        st.dataframe(df, height=height) 
+    elif len(dfs) == 2:
+        df1, df2 = dfs
+        col1, col2, _ = st.columns((1, 1, 1))
+        with col1:
+            st.write("Irreversibility ratio:")
+            st.dataframe(df1, height=height)
+        with col2:
+            st.write("Entropy production rate:")
+            st.dataframe(df2, height=height)
 
 def display_info(x0_bounds, info=''):
     """
@@ -872,7 +876,7 @@ def tab_ts_sa():
     display_results([df1, df2, df3])
 
 @st.fragment
-def tab_i_sa():
+def tab_ir_sa():
     col_control, _, col_info = st.columns((0.34, 0.02, 0.64))
     
     with col_info:
@@ -903,95 +907,42 @@ def tab_i_sa():
     I = np.arange(var_range[0], var_range[1]+step_size, step_size)
     initial_params = {
         'ir': [init_eps_t, init_c_t, init_q, init_t_s, MULTIPLIER],
-    }
-
-    # Perform optimization
-    start_time = time.time()
-    with st.spinner("Calculating..."):
-        opt_config = ('sa', 'I')
-        results = {
-            'ir': find_minimum_vectorized(
-                objective_function_ir_ratio, I, opt_config,
-                guess_bound, *initial_params['ir'],
-                method=opt_method, tol=tolerance,
-                warm_start=warm_start
-                ),
-        }
-        df1,  = results_to_df(results, I, 'I', fix=cuttoff_outliers)
-
-    runtime_info(st_runtime_info, start_time, txt)
-
-
-    plotting_sensitivity(
-        [df1], 
-        ['irrevers. ratio'], 
-        POWER_OF_10,
-        theme_session
-    )
-
-    display_results([df1])
-
-@st.fragment
-def tab_s_sa():
-    col_control, _, col_info = st.columns((0.34, 0.02, 0.64))
-    
-    with col_info:
-        # settings
-        step_size, var_range, *opt_settings = settings_popover('s', DEFAULT_SETTING_VALUES)
-        opt_method, tolerance, guess_bound, warm_start, cuttoff_outliers = opt_settings
-        txt = f'(warm starting*)' if warm_start else ''
-        
-        display_info(guess_bound, info=txt)
-
-        st.warning('updating...')
-    
-    with col_control:
-        # sliders
-        init_eps_t = init_slider(r'$\varepsilon_{total}:$', 's_e_t', 0.4, 4.0, 0.01)
-        init_c_t = init_slider('$c_{total}:$', 's_c_t', 0.1, 1.0, 0.01)
-        init_q = init_slider(
-            '$q_{0}:$', 's_q0', 1.0, 100.0, 0.1, fmt="%.1f",
-            help=fr'$q_{{0}} \times 10^{{-{POWER_OF_10:.0f}}}$'
-        )
-        init_t_s = init_slider('$t_{s}:$', 's_t_s', 0.8, 1.0, 0.01)
-
-        st.button(
-            "Reset", on_click=lambda: reset_sliders(DEFAULT_SA_SLIDERS), 
-            key='btn_sas', help='Reset Parameters to Defaults'
-        )
-        st_runtime_info = st.empty()
-
-
-    s = np.arange(var_range[0], var_range[1]+0.0001, step_size)
-    initial_params = {
         'ep': [init_eps_t, init_c_t, init_q, init_t_s, MULTIPLIER],
     }
 
     # Perform optimization
     start_time = time.time()
     with st.spinner("Calculating..."):
-        opt_config = ('sa', 's')
+        opt_config = [('sa', 'I'), ('sa', 's')]
         results = {
+            'ir': find_minimum_vectorized(
+                objective_function_ir_ratio, I, opt_config[0],
+                guess_bound, *initial_params['ir'],
+                method=opt_method, tol=tolerance,
+                warm_start=warm_start
+                ),
             'ep': find_minimum_vectorized(
-                objective_function_ep_rate, s, opt_config,
+                objective_function_ep_rate, I, opt_config[1],
                 guess_bound, *initial_params['ep'],
                 method=opt_method, tol=tolerance,
                 warm_start=warm_start
                 ),
         }
-        df1,  = results_to_df(results, s, 's', fix=cuttoff_outliers)
+        
+        df1, df2 = results_to_df(results, I, 'I', fix=cuttoff_outliers)
 
     runtime_info(st_runtime_info, start_time, txt)
 
 
     plotting_sensitivity(
-        [df1], 
-        ['entropy prod. rate'], 
+        [df1, df2], 
+        ['irrevers. ratio', 'entropy prod. rate'], 
         POWER_OF_10,
         theme_session
     )
 
-    display_results([df1])
+    df2 = df2.set_index('s')
+    display_results([df1, df2])
 
 @st.fragment
 def sensitivity_analysis():
@@ -1000,13 +951,12 @@ def sensitivity_analysis():
 
     st.info(r'Choose a variable/parameter to analyze its impact on the minimum power consumption $min(w)$')
     st.warning('updating...')
-    tab_e, tab_c, tab_q, tab_t, tab_i, tab_s = st.tabs(
+    tab_e, tab_c, tab_q, tab_t, tab_ir = st.tabs(
         [
         r'$\varepsilon_{total}$', '$c_{total}$', 
         '&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;', 
         '&nbsp;&nbsp;&nbsp;&nbsp;$t_s$&nbsp;&nbsp;&nbsp;&nbsp;', 
-        '&nbsp;&nbsp;&nbsp;&nbsp;$I$&nbsp;&nbsp;&nbsp;&nbsp;', 
-        '&nbsp;&nbsp;&nbsp;&nbsp;$s$&nbsp;&nbsp;&nbsp;&nbsp;'
+        '&nbsp;&nbsp;&nbsp;$I\ \&\ s$&nbsp;&nbsp;&nbsp;', 
         ]
     )
 
@@ -1051,25 +1001,16 @@ def sensitivity_analysis():
         st.write('')
         tab_ts_sa()
 
-    with tab_i:
+    with tab_ir:
         st.markdown(
             r'''
-            Minimum power consumption $\min(w)$ as a function of $I$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
-            Parameter $I$ is for the irreversibility ratio.
+            Minimum power consumption $\min(w)$ as a function of parameters $I$ and $s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
+            Parameters $I$ and $s$ are for the irreversibility ratio and entropy production rate, respectively.
             '''
         )
         st.write('')
-        tab_i_sa()
+        tab_ir_sa()
 
-    with tab_s:
-        st.markdown(
-            r'''
-            Minimum power consumption $\min(w)$ as a function of $s$, with parameters $\varepsilon_{total}$, $c_{total}$, $q_0$, and $t_s$.  
-            Parameter $s$ is for the entropy production rate.
-            '''
-        )
-        st.write('')
-        tab_s_sa()
 
 
 #==============SENSITIVITY ANALYSIS==============
