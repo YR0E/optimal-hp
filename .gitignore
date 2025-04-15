@@ -1,6 +1,8 @@
+.vscode
 .streamlit/secrets.toml
 paper_plot/
 _extra/
 __pycache__/
-98_calc_for_paper.ipynb
-99_plots_q0.ipynb
+
+*.ipynb
+*.code-workspace
