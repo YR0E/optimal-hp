@@ -214,8 +214,8 @@ def tab_eps_total_plane():
     st.write("#### Results:")
     df = pd.DataFrame(
         {
-            "I": [np.NaN, init_I, np.NaN],
-            f"s [e-{POWER_OF_10:.0f}]": [np.NaN, np.NaN, init_s],
+            "I": [np.nan, init_I, np.nan],
+            f"s [e-{POWER_OF_10:.0f}]": [np.nan, np.nan, init_s],
             "e*_g": [results["r"].x[0], results["ir"].x[0], results["ep"].x[0]],
             "e*_p": [results["r"].x[1], results["ir"].x[1], results["ep"].x[1]],
             "e*_ev": [results["r"].x[2], results["ir"].x[2], results["ep"].x[2]],
@@ -296,8 +296,8 @@ def tab_c_total_plane():
     st.write("#### Results:")
     df = pd.DataFrame(
         {
-            "I": [np.NaN, init_I, np.NaN],
-            f"s [e-{POWER_OF_10:.0f}]": [np.NaN, np.NaN, init_s],
+            "I": [np.nan, init_I, np.nan],
+            f"s [e-{POWER_OF_10:.0f}]": [np.nan, np.nan, init_s],
             "c*_g": [results["r"].x[0], results["ir"].x[0], results["ep"].x[0]],
             "c*_p": [results["r"].x[1], results["ir"].x[1], results["ep"].x[1]],
             f"min(w) [e-{POWER_OF_10:.0f}]": np.array(

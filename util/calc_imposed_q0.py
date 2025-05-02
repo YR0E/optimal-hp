@@ -101,15 +101,19 @@ def objective_function(x, initial_params, config):
     float: The value of the objective function.
     """
 
-    e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others = parse_config(
+    e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t, others = parse_config(
         x, initial_params, config
     )
 
     q0 = q0 / others[0]  # /MULTIPLIER
-    a_g, a_ev, a_p, a_cd = e_g / e_t, e_ev / e_t, e_p / e_t, e_cd / e_t
-    c_eps = (1 / a_g + 1 / a_ev - e_t) / c_g + (1 / a_p + 1 / a_cd - e_t) / c_p
+    # a_g, a_ev, a_p, a_cd = e_g / e_t, e_ev / e_t, e_p / e_t, e_cd / e_t
+    # c_eps = (1 / a_g + 1 / a_ev - e_t) / c_g + (1 / a_p + 1 / a_cd - e_t) / c_p
+    alpha_g = (1 / e_g + 1 / e_ev - 1) / c_g
+    alpha_p = (1 / e_p + 1 / e_cd - 1) / c_p
+    alpha = alpha_g + alpha_p
 
-    return q0 * (c_eps * q0 + e_t * (1 - t_s)) / (e_t * t_s - c_eps * q0)
+    # return q0 * (c_eps * q0 + e_t * (1 - t_s)) / (e_t * t_s - c_eps * q0)
+    return q0 * (1 / (t - q0 * alpha) - 1)
 
 
 def objective_function_ir_ratio(x, initial_params, config):
@@ -125,16 +129,21 @@ def objective_function_ir_ratio(x, initial_params, config):
     float: The value of the objective function.
     """
 
-    e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others = parse_config(
+    e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t, others = parse_config(
         x, initial_params, config
     )
 
     I = others[0]
     q0 = q0 / others[1]  # /MULTIPLIER
-    a_g, a_ev, a_p, a_cd = e_g / e_t, e_ev / e_t, e_p / e_t, e_cd / e_t
-    c_eps = (1 / a_g + 1 / a_ev - e_t) / (c_g * I) + (1 / a_p + 1 / a_cd - e_t) / c_p
+    # a_g, a_ev, a_p, a_cd = e_g / e_t, e_ev / e_t, e_p / e_t, e_cd / e_t
+    # c_eps = (1 / a_g + 1 / a_ev - e_t) / (c_g * I) + (1 / a_p + 1 / a_cd - e_t) / c_p
 
-    return q0 * (I * c_eps * q0 + e_t * (I - t_s)) / (e_t * t_s - I * c_eps * q0)
+    alpha_g = (1 / e_g + 1 / e_ev - 1) / c_g
+    alpha_p = (1 / e_p + 1 / e_cd - 1) / c_p
+    alpha_I = alpha_g + I * alpha_p
+
+    # return q0 * (I * c_eps * q0 + e_t * (I - t_s)) / (e_t * t_s - I * c_eps * q0)
+    return q0 * (I / (t - q0 * alpha_I) - 1)
 
 
 def objective_function_ep_rate(x, initial_params, config):
@@ -149,26 +158,34 @@ def objective_function_ep_rate(x, initial_params, config):
     Returns:
     float: The value of the objective function.
     """
-    e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t_s, others = parse_config(
+    e_g, e_p, e_ev, e_cd, c_g, c_p, e_t, q0, t, others = parse_config(
         x, initial_params, config
     )
 
     s = others[0] / others[1]  # s / MULTIPLIER
     q0 = q0 / others[1]  # /MULTIPLIER
-    a_g, a_ev, a_p, a_cd = e_g / e_t, e_ev / e_t, e_p / e_t, e_cd / e_t
-    c_eps = (
-        (1 / a_g + 1 / a_ev - e_t) / c_g
-        + (1 / a_p + 1 / a_cd - e_t) / c_p
-        - s
-        * (1 / a_g + 1 / a_ev - e_t)
-        * (1 / a_p + 1 / a_cd - e_t)
-        / (c_p * c_g * e_t)
-    )
-    c_A = e_t - s * (1 / a_g + 1 / a_ev - e_t) / c_g
-    c_B = e_t - s * (1 / a_p + 1 / a_cd - e_t) / c_p
+    # a_g, a_ev, a_p, a_cd = e_g / e_t, e_ev / e_t, e_p / e_t, e_cd / e_t
+    # c_eps = (
+    #     (1 / a_g + 1 / a_ev - e_t) / c_g
+    #     + (1 / a_p + 1 / a_cd - e_t) / c_p
+    #     - s
+    #     * (1 / a_g + 1 / a_ev - e_t)
+    #     * (1 / a_p + 1 / a_cd - e_t)
+    #     / (c_p * c_g * e_t)
+    # )
+    # c_A = e_t - s * (1 / a_g + 1 / a_ev - e_t) / c_g
+    # c_B = e_t - s * (1 / a_p + 1 / a_cd - e_t) / c_p
+    alpha_g = (1 / e_g + 1 / e_ev - 1) / c_g
+    alpha_p = (1 / e_p + 1 / e_cd - 1) / c_p
+    alpha_sg = 1 - s * alpha_g
+    alpha_sp = 1 - s * alpha_p
+    alpha_s = alpha_g + alpha_p - s * alpha_g * alpha_p
 
-    return (q0 * (c_eps * q0 + c_A - c_B * t_s) + s * t_s * e_t) / (
-        c_B * t_s - c_eps * q0
+    # return (q0 * (c_eps * q0 + c_A - c_B * t_s) + s * t_s * e_t) / (
+    #     c_B * t_s - c_eps * q0
+    # )
+    return q0 * (alpha_sg / (t * alpha_sp - q0 * alpha_s) - 1) + s * t / (
+        t * alpha_sp - q0 * alpha_s
     )
 
 
