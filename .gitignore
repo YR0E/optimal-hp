@@ -1,4 +1,5 @@
 .vscode
+.devcontainer/
 .streamlit/
 paper_plot/
 _extra/
