@@ -8,11 +8,11 @@ from scipy.signal import savgol_filter
 from streamlit_theme import st_theme
 
 from util.calc_imposed_q0 import (
-    find_minimum,
-    find_minimum_vectorized,
-    objective_function,
-    objective_function_ep_rate,
-    objective_function_ir_ratio,
+    find_optimum,
+    find_optimum_vectorized,
+    min_w_ep,
+    min_w_ir,
+    min_w_r,
 )
 from util.plot import plotting3D, plotting_sensitivity
 
@@ -201,9 +201,9 @@ def tab_eps_total_plane():
     }
     opt_var = "e"
     results = {
-        "r": find_minimum(objective_function, initial_params["r"], opt_var),
-        "ir": find_minimum(objective_function_ir_ratio, initial_params["ir"], opt_var),
-        "ep": find_minimum(objective_function_ep_rate, initial_params["ep"], opt_var),
+        "r": find_optimum(min_w_r, initial_params["r"], opt_var),
+        "ir": find_optimum(min_w_ir, initial_params["ir"], opt_var),
+        "ep": find_optimum(min_w_ep, initial_params["ep"], opt_var),
     }
 
     # =====PLOT=====
@@ -283,9 +283,9 @@ def tab_c_total_plane():
     }
     opt_var = "c"
     results = {
-        "r": find_minimum(objective_function, initial_params["r"], opt_var),
-        "ir": find_minimum(objective_function_ir_ratio, initial_params["ir"], opt_var),
-        "ep": find_minimum(objective_function_ep_rate, initial_params["ep"], opt_var),
+        "r": find_optimum(min_w_r, initial_params["r"], opt_var),
+        "ir": find_optimum(min_w_ir, initial_params["ir"], opt_var),
+        "ep": find_optimum(min_w_ep, initial_params["ep"], opt_var),
     }
 
     # =====PLOT=====
@@ -330,7 +330,7 @@ with tab_eps_total:
 
 with tab_c_total:
     st.write(
-        "Curzon-Ahlborn model: imposed $q_0 - c_{total}$: find minimum power consumption $\min(w)$"
+        r"Curzon-Ahlborn model: imposed $q_0 - c_{total}$: find minimum power consumption $\min(w)$"
     )
     st.write("")
     tab_c_total_plane()
@@ -774,8 +774,8 @@ def tab_e_total_sa():
     with st.spinner("Calculating..."):
         opt_config = ("sa", "e")
         results = {
-            "r": find_minimum_vectorized(
-                objective_function,
+            "r": find_optimum_vectorized(
+                min_w_r,
                 e_total,
                 opt_config,
                 guess_bound,
@@ -784,8 +784,8 @@ def tab_e_total_sa():
                 tol=tolerance,
                 warm_start=warm_start,
             ),
-            "ir": find_minimum_vectorized(
-                objective_function_ir_ratio,
+            "ir": find_optimum_vectorized(
+                min_w_ir,
                 e_total,
                 opt_config,
                 guess_bound,
@@ -794,8 +794,8 @@ def tab_e_total_sa():
                 tol=tolerance,
                 warm_start=warm_start,
             ),
-            "ep": find_minimum_vectorized(
-                objective_function_ep_rate,
+            "ep": find_optimum_vectorized(
+                min_w_ep,
                 e_total,
                 opt_config,
                 guess_bound,
@@ -892,8 +892,8 @@ def tab_c_total_sa():
     with st.spinner("Calculating..."):
         opt_config = ("sa", "c")
         results = {
-            "r": find_minimum_vectorized(
-                objective_function,
+            "r": find_optimum_vectorized(
+                min_w_r,
                 c_total,
                 opt_config,
                 guess_bound,
@@ -902,8 +902,8 @@ def tab_c_total_sa():
                 tol=tolerance,
                 warm_start=warm_start,
             ),
-            "ir": find_minimum_vectorized(
-                objective_function_ir_ratio,
+            "ir": find_optimum_vectorized(
+                min_w_ir,
                 c_total,
                 opt_config,
                 guess_bound,
@@ -912,8 +912,8 @@ def tab_c_total_sa():
                 tol=tolerance,
                 warm_start=warm_start,
             ),
-            "ep": find_minimum_vectorized(
-                objective_function_ep_rate,
+            "ep": find_optimum_vectorized(
+                min_w_ep,
                 c_total,
                 opt_config,
                 guess_bound,
@@ -1002,8 +1002,8 @@ def tab_q0_sa():
     with st.spinner("Calculating..."):
         opt_config = ("sa", "q")
         results = {
-            "r": find_minimum_vectorized(
-                objective_function,
+            "r": find_optimum_vectorized(
+                min_w_r,
                 q0,
                 opt_config,
                 guess_bound,
@@ -1012,8 +1012,8 @@ def tab_q0_sa():
                 tol=tolerance,
                 warm_start=warm_start,
             ),
-            "ir": find_minimum_vectorized(
-                objective_function_ir_ratio,
+            "ir": find_optimum_vectorized(
+                min_w_ir,
                 q0,
                 opt_config,
                 guess_bound,
@@ -1022,8 +1022,8 @@ def tab_q0_sa():
                 tol=tolerance,
                 warm_start=warm_start,
             ),
-            "ep": find_minimum_vectorized(
-                objective_function_ep_rate,
+            "ep": find_optimum_vectorized(
+                min_w_ep,
                 q0,
                 opt_config,
                 guess_bound,
@@ -1120,8 +1120,8 @@ def tab_ts_sa():
     with st.spinner("Calculating..."):
         opt_config = ("sa", "t")
         results = {
-            "r": find_minimum_vectorized(
-                objective_function,
+            "r": find_optimum_vectorized(
+                min_w_r,
                 t_s,
                 opt_config,
                 guess_bound,
@@ -1130,8 +1130,8 @@ def tab_ts_sa():
                 tol=tolerance,
                 warm_start=warm_start,
             ),
-            "ir": find_minimum_vectorized(
-                objective_function_ir_ratio,
+            "ir": find_optimum_vectorized(
+                min_w_ir,
                 t_s,
                 opt_config,
                 guess_bound,
@@ -1140,8 +1140,8 @@ def tab_ts_sa():
                 tol=tolerance,
                 warm_start=warm_start,
             ),
-            "ep": find_minimum_vectorized(
-                objective_function_ep_rate,
+            "ep": find_optimum_vectorized(
+                min_w_ep,
                 t_s,
                 opt_config,
                 guess_bound,
@@ -1227,8 +1227,8 @@ def tab_ir_sa():
     with st.spinner("Calculating..."):
         opt_config = [("sa", "I"), ("sa", "s")]
         results = {
-            "ir": find_minimum_vectorized(
-                objective_function_ir_ratio,
+            "ir": find_optimum_vectorized(
+                min_w_ir,
                 I,
                 opt_config[0],
                 guess_bound,
@@ -1237,8 +1237,8 @@ def tab_ir_sa():
                 tol=tolerance,
                 warm_start=warm_start,
             ),
-            "ep": find_minimum_vectorized(
-                objective_function_ep_rate,
+            "ep": find_optimum_vectorized(
+                min_w_ep,
                 I,
                 opt_config[1],
                 guess_bound,
@@ -1282,7 +1282,7 @@ def sensitivity_analysis():
             "$c_{total}$",
             "&nbsp;&nbsp;&nbsp;&nbsp;$q_0$&nbsp;&nbsp;&nbsp;&nbsp;",
             "&nbsp;&nbsp;&nbsp;&nbsp;$t_s$&nbsp;&nbsp;&nbsp;&nbsp;",
-            "&nbsp;&nbsp;&nbsp;$I\ \&\ s$&nbsp;&nbsp;&nbsp;",
+            r"&nbsp;&nbsp;&nbsp;$I\ \&\ s$&nbsp;&nbsp;&nbsp;",
         ]
     )
 

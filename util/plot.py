@@ -5,9 +5,9 @@ from plotly.colors import DEFAULT_PLOTLY_COLORS
 from plotly.subplots import make_subplots
 
 from util.calc_imposed_q0 import (
-    objective_function,
-    objective_function_ep_rate,
-    objective_function_ir_ratio,
+    min_w_ep,
+    min_w_ir,
+    min_w_r,
 )
 
 # Set default layout settings for axes title fonts
@@ -70,9 +70,9 @@ def plotting3D(res, initial_params, opt_var):
         args = [X, Y]
         constraint_limit = init_val
 
-    Z = objective_function(args, initial_params["r"], opt_var) * MULTIPLIER
-    Z_ir = objective_function_ir_ratio(args, initial_params["ir"], opt_var) * MULTIPLIER
-    Z_ep = objective_function_ep_rate(args, initial_params["ep"], opt_var) * MULTIPLIER
+    Z = min_w_r(args, initial_params["r"], opt_var) * MULTIPLIER
+    Z_ir = min_w_ir(args, initial_params["ir"], opt_var) * MULTIPLIER
+    Z_ep = min_w_ep(args, initial_params["ep"], opt_var) * MULTIPLIER
 
     # contraint line
     min_line_lim, max_line_lim = np.min([Z, Z_ir, Z_ep]), np.max([Z, Z_ir, Z_ep])
