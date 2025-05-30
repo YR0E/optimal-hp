@@ -354,7 +354,7 @@ def find_optimum_vectorized(
             },  # sum(c_i) = c_t
         ]
 
-        if obj_func.__name__ == "min_w_ep":
+        if obj_func.__name__ in ["min_w_ep", "max_COP_ep"]:
             e_total = initial_params[0]
             c_total = initial_params[1]
             q0 = initial_params[2]
@@ -384,7 +384,7 @@ def find_optimum_vectorized(
 
         results.append(result)  # Store the minimized function value
 
-    if obj_func.__name__ == "min_w_ep":
+    if obj_func.__name__ in ["min_w_ep", "max_COP_ep"]:
         return np.array(results), np.array(s_values)
     else:
         return np.array(results)
