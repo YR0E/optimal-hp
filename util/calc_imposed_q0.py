@@ -287,7 +287,7 @@ def find_optimum(obj_func, initial_params, config):
         bounds=bounds,
         constraints=constraints,
         # method="SLSQP",
-        tol=1e-16,
+        tol=1e-15,
     )
     return result
 
