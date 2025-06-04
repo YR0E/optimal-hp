@@ -110,7 +110,7 @@ def min_w_r(x, initial_params, config):
     alpha_p = (1 / e_p + 1 / e_cd - 1) / c_p
     alpha = alpha_g + alpha_p
 
-    return q0 * (1 / (t - q0 * alpha) - 1)
+    return q0 * (1 - t / (q0 * alpha + 1))
 
 
 def max_COP_r(x, initial_params, config):
@@ -135,7 +135,7 @@ def max_COP_r(x, initial_params, config):
     alpha_p = (1 / e_p + 1 / e_cd - 1) / c_p
     alpha = alpha_g + alpha_p
 
-    return -1 / (q0 * alpha + 1 - t)
+    return -(q0 * alpha + 1) / (q0 * alpha + 1 - t)
 
 
 def min_w_ir(x, initial_params, config):
@@ -162,7 +162,7 @@ def min_w_ir(x, initial_params, config):
     alpha_p = (1 / e_p + 1 / e_cd - 1) / c_p
     alpha_I = alpha_g + I * alpha_p
 
-    return q0 * (I / (t - q0 * alpha_I) - 1)
+    return q0 * (1 - t / (I + q0 * alpha_I))
 
 
 def max_COP_ir(x, initial_params, config):
@@ -189,7 +189,7 @@ def max_COP_ir(x, initial_params, config):
     alpha_p = (1 / e_p + 1 / e_cd - 1) / c_p
     alpha_I = alpha_g + I * alpha_p
 
-    return -I / (q0 * alpha_I + I - t)
+    return -(I + q0 * alpha_I) / (q0 * alpha_I + I - t)
 
 
 def min_w_ep(x, initial_params, config):
@@ -217,8 +217,8 @@ def min_w_ep(x, initial_params, config):
     alpha_sp = 1 - s * alpha_p
     alpha_s = alpha_g + alpha_p - s * alpha_g * alpha_p
 
-    return q0 * (alpha_sg / (t * alpha_sp - q0 * alpha_s) - 1) + (s * t) / (
-        t * alpha_sp - q0 * alpha_s
+    return q0 * (1 - (t * alpha_sp) / (q0 * alpha_s + alpha_sg)) + (s * t) / (
+        q0 * alpha_s + alpha_sg
     )
 
 
@@ -247,8 +247,8 @@ def max_COP_ep(x, initial_params, config):
     alpha_sp = 1 - s * alpha_p
     alpha_s = alpha_g + alpha_p - s * alpha_g * alpha_p
 
-    return -(alpha_sg + (s * t) / q0) / (
-        q0 * alpha_s + alpha_sg + (s * t) / q0 - t * alpha_sp
+    return -(q0 * alpha_s + alpha_sg) / (
+        q0 * alpha_s + alpha_sg - t * alpha_sp - (s * t) / q0
     )
 
 
@@ -286,7 +286,7 @@ def find_optimum(obj_func, initial_params, config):
         args=(initial_params, config),
         bounds=bounds,
         constraints=constraints,
-        # method="SLSQP",
+        # method='SLSQP',
         tol=1e-16,
     )
     return result
@@ -364,7 +364,7 @@ def find_optimum_vectorized(
 
             s = (
                 ((I - 1) * q0 / MULTIPLIER)
-                / (t_s - (2 * q0 / (MULTIPLIER * c_total)) * (8 / e_total - 1))
+                / (1 + (2 * q0 / (MULTIPLIER * c_total)) * (8 / e_total - 1))
                 * MULTIPLIER
             )
             initial_params = (e_total, c_total, q0, t_s, s, MULTIPLIER)
