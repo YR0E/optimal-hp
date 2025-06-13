@@ -364,7 +364,7 @@ def find_optimum_vectorized(
 
             s = (
                 ((I - 1) * q0 / MULTIPLIER)
-                / (1 + (2 * q0 / (MULTIPLIER * c_total)) * (8 / e_total - 1))
+                / (I + (2 * I * q0 / (MULTIPLIER * c_total)) * (8 / e_total - 1))
                 * MULTIPLIER
             )
             initial_params = (e_total, c_total, q0, t_s, s, MULTIPLIER)
